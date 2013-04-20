@@ -127,6 +127,8 @@ $(function(){
 		width = $container.width();
 		
 		$container.cytoscapePanzoom();
+
+		$container.cytoscapeNavigationpanel();
 		
 		$container.cytoscapeEdgehandles({
 			lineType: "straight",
@@ -245,6 +247,18 @@ $(function(){
 				       console.log("%o", node);
 				   });
 				}
+			}).cy(function () {
+				$container2.cytoscapeNavigationpanel({
+					container: "#cytoscape2Navigaionpanel"
+				, forceClassName: false
+				, position: {
+						horizontal: 600
+					, vertical: 0
+					}
+				, size: {
+						height: 300
+					}
+				});
 			});
 
 		

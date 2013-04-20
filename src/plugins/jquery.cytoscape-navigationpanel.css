@@ -1,0 +1,6 @@
+.cytoscape-navigationpanel{
+	position: absolute;
+	border: 1px solid #000;
+	background: #fff;
+	z-index: 99999;
+}
