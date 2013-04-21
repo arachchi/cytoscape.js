@@ -1,11 +1,11 @@
-.cytoscape-navigationpanel{
+.cytoscape-navigationPanel{
 	position: absolute;
 	border: 1px solid #000;
 	background: #fff;
 	z-index: 99999;
 }
 
-.cytoscape-navigationview{
+.cytoscape-navigationView{
 	position: absolute;
 	border: 1px solid red;
 	cursor: move;

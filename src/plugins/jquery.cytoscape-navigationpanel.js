@@ -2,7 +2,7 @@
 	
 	var defaults = {
 		forceClassName: true
-	, className: 'cytoscape-navigationpanel'
+	, className: 'cytoscape-navigationPanel'
 	, position: {
 			vertical: 400 // can be 'top', 'bottom', 'middle', a number (will be used as px), a string which contains a number +px or +%. Percent will be computed based on container size.
 		, horizontal: 400 // can be 'left', 'right', 'center', a number (will be used as px), a string which contains a number +px or +%. Percent will be computed based on container size.
@@ -16,69 +16,69 @@
 		}
 	};
 	
-	$.fn.cytoscapeNavigationpanel = function(params){
+	$.fn.cytoscapeNavigationPanel = function(params){
 		var options = $.extend(true, {}, defaults, params);
 		var fn = params;
 		
 		var functions = {
 			destroy: function(){
-				this.navigationpanel != undefined && this.navigationpanel instanceof jQuery && this.navigationpanel.remove();
+				this.navigationPanel != undefined && this.navigationPanel instanceof jQuery && this.navigationPanel.remove();
 			},
 				
 			init: function(){
 				return $(this).each(function(){
 					var $container = $(this)
-						, $navigationpanel
+						, $navigationPanel
 						;
 					
 					if( options.container != undefined ){
 						if( options.container instanceof jQuery ){
 							if( options.container.length > 0 ){
-								$navigationpanel = options.container.first();
+								$navigationPanel = options.container.first();
 
 								// Add class name
-								options.forceClassName && $navigationpanel.addClass(options.className);
+								options.forceClassName && $navigationPanel.addClass(options.className);
 							} else {
-								$.error("Container for jquery.cyNavigationpanel is empty");
+								$.error("Container for jquery.cyNavigationPanel is empty");
 								return;
 							}
 						} else if ( $(options.container).length > 0 ) {
-							$navigationpanel = $(options.container).first();
+							$navigationPanel = $(options.container).first();
 
 							// Add class name
-							options.forceClassName && $navigationpanel.addClass(options.className);
+							options.forceClassName && $navigationPanel.addClass(options.className);
 						} else {
-							$.error("There is no any element matching your selector for jquery.cyNavigationpanel");
+							$.error("There is no any element matching your selector for jquery.cyNavigationPanel");
 							return;
 						}
 					} else {
-						$navigationpanel = $('<div class="cytoscape-navigationpanel"/>');
-						$container.append( $navigationpanel );
+						$navigationPanel = $('<div class="cytoscape-navigationPanel"/>');
+						$container.append( $navigationPanel );
 					}
 
 					// Save a reference to navigation panel into dom element
-					$container[0].navigationpanel = $navigationpanel
+					$container[0].navigationPanel = $navigationPanel
 
 					// TODO accept all described options
-					$navigationpanel.width(options.size.width)
-					$navigationpanel.height(options.size.height)
-					$navigationpanel.css({top: options.position.vertical, left: options.position.horizontal})
+					$navigationPanel.width(options.size.width)
+					$navigationPanel.height(options.size.height)
+					$navigationPanel.css({top: options.position.vertical, left: options.position.horizontal})
 
 					// Add navigator view
-					$navigationview = $('<div class="cytoscape-navigationview"/>');
-					$navigationpanel.append($navigationview);
+					$navigationView = $('<div class="cytoscape-navigationView"/>');
+					$navigationPanel.append($navigationView);
 
 					// Save a reference to navigation view
-					$container[0].navigationview = $navigationview;
+					$container[0].navigationView = $navigationView;
 
 					// Set default navigaion view size
 					// TODO init depending on viewport sizes
-					$navigationview.width(100)
-					$navigationview.height(100)
+					$navigationView.width(100)
+					$navigationView.height(100)
 
 					// Make navigation view draggable
 					// TODO get rid of jQuery UI 
-					$navigationview.draggable({ containment: $navigationpanel, scroll: false })
+					$navigationView.draggable({ containment: $navigationPanel, scroll: false })
 				})
 			}
 		};
@@ -94,6 +94,6 @@
 		return $(this);
 	};
 
-	$.fn.cyNavigationpanel = $.fn.cytoscapeNavigationpanel;
+	$.fn.cyNavigationPanel = $.fn.cytoscapeNavigationPanel;
 	
 })(jQuery);
