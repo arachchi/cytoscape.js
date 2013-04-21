@@ -4,12 +4,12 @@
 		forceClassName: true
 	, className: 'cytoscape-navigationPanel'
 	, position: {
-			vertical: 400 // can be 'top', 'bottom', 'middle', a number (will be used as px), a string which contains a number +px or +%. Percent will be computed based on container size.
+			vertical: 450 // can be 'top', 'bottom', 'middle', a number (will be used as px), a string which contains a number +px or +%. Percent will be computed based on container size.
 		, horizontal: 400 // can be 'left', 'right', 'center', a number (will be used as px), a string which contains a number +px or +%. Percent will be computed based on container size.
 		}
 	, size: {
 			width: 200 // can be a number (will be used as px), a string which contains a number +px or +%. Percent will be computed based on container size.
-		, height: 200 // can be a number (will be used as px), a string which contains a number +px or +%. Percent will be computed based on container size.
+		, height: 150 // can be a number (will be used as px), a string which contains a number +px or +%. Percent will be computed based on container size.
 		}
 	, view: {
 			borderWidth: 1
@@ -56,7 +56,7 @@
 						$container.append( $navigationPanel );
 					}
 
-					// Save a reference to navigation panel into dom element
+					// Save a reference into container dom element
 					$container[0].navigationPanel = $navigationPanel;
 
 					// TODO accept all described options
@@ -64,11 +64,36 @@
 					$navigationPanel.height(options.size.height);
 					$navigationPanel.css({top: options.position.vertical, left: options.position.horizontal});
 
-					// Add navigator view
-					$navigationView = $('<div class="cytoscape-navigationView"/>');
-					$navigationPanel.append($navigationView);
+					// Add thumbnail
+					var $navigationThumbnail = $('<dib class="cytoscape-navigationThumbnail"/>')
+						, navigationPanelRatio = 1.0 * $navigationPanel.width() / $navigationPanel.height()
+						, navigationThumbnailRatio = 1.0 * $container.width() / $container.height()
+						;
 
-					// Save a reference to navigation view
+					if( navigationPanelRatio > navigationThumbnailRatio ) {
+						// panel width is bigger than thumbnail width
+						$navigationThumbnail.width(navigationThumbnailRatio * $navigationPanel.height());
+						$navigationThumbnail.height($navigationPanel.height());
+						$navigationThumbnail.css({left: ($navigationPanel.width() - $navigationThumbnail.height())/2});
+					} else {
+						// panel height is bigger than thumbnail height
+						$navigationThumbnail.width($navigationPanel.width());
+						$navigationThumbnail.height(navigationThumbnailRatio * $navigationPanel.width());
+						$navigationThumbnail.css({top: ($navigationPanel.height() - $navigationThumbnail.width())/2});
+					}
+
+					// TODO Populate thumbnail with a render of graph
+
+					// Add thumbnail to the dom
+					$navigationPanel.append($navigationThumbnail);
+					// Save a reference into container dom element
+					$container[0].navigationThumbnail = $navigationThumbnail;
+
+					// Add navigator view
+					var $navigationView = $('<div class="cytoscape-navigationView"/>');
+					$navigationThumbnail.append($navigationView);
+
+					// Save a reference into container dom element
 					$container[0].navigationView = $navigationView;
 
 					// Set default navigaion view size
@@ -78,7 +103,7 @@
 
 					// Make navigation view draggable
 					// TODO get rid of jQuery UI 
-					$navigationView.draggable({ containment: $navigationPanel, scroll: false });
+					$navigationView.draggable({ containment: $navigationThumbnail, scroll: false });
 				})
 			}
 		};
