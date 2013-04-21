@@ -57,12 +57,12 @@
 					}
 
 					// Save a reference to navigation panel into dom element
-					$container[0].navigationPanel = $navigationPanel
+					$container[0].navigationPanel = $navigationPanel;
 
 					// TODO accept all described options
-					$navigationPanel.width(options.size.width)
-					$navigationPanel.height(options.size.height)
-					$navigationPanel.css({top: options.position.vertical, left: options.position.horizontal})
+					$navigationPanel.width(options.size.width);
+					$navigationPanel.height(options.size.height);
+					$navigationPanel.css({top: options.position.vertical, left: options.position.horizontal});
 
 					// Add navigator view
 					$navigationView = $('<div class="cytoscape-navigationView"/>');
@@ -73,12 +73,12 @@
 
 					// Set default navigaion view size
 					// TODO init depending on viewport sizes
-					$navigationView.width(100)
-					$navigationView.height(100)
+					$navigationView.width(100);
+					$navigationView.height(100);
 
 					// Make navigation view draggable
 					// TODO get rid of jQuery UI 
-					$navigationView.draggable({ containment: $navigationPanel, scroll: false })
+					$navigationView.draggable({ containment: $navigationPanel, scroll: false });
 				})
 			}
 		};
