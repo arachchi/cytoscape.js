@@ -4,3 +4,9 @@
 	background: #fff;
 	z-index: 99999;
 }
+
+.cytoscape-navigationview{
+	position: absolute;
+	border: 1px solid red;
+	cursor: move;
+}
