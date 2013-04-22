@@ -85,7 +85,9 @@
 		}
 
 	, initView: function () {
-			var that = this;
+			var that = this
+				, cy = this.$element.cytoscape('get')
+				;
 
 			this.$view = $('<div class="cytoscape-navigationView"/>');
 			this.$thumbnail.append(this.$view);
@@ -108,6 +110,11 @@
 					}
 				}
 			});
+
+			// TODO find a way to stop propadation of mousemove. May be achived by replacing jQuery UI
+			this.$view.on('click.navigationpanel mousedown.navigationpanel touchstart.navigationpanel ', function (ev) {
+				ev.stopPropagation();
+			})
 
 			// Set default navigaion view size
 			this.setView();
