@@ -85,16 +85,78 @@
 		}
 
 	, initView: function () {
+			var that = this;
+
 			this.$view = $('<div class="cytoscape-navigationView"/>');
 			this.$thumbnail.append(this.$view);
 
-			// Set default navigaion view size
-			// TODO init depending on viewport sizes
-			this.$view.width(100).height(100);
-
 			// Make navigation view draggable
 			// TODO get rid of jQuery UI 
-			this.$view.draggable({ containment: this.$thumbnail, scroll: false });
+			this.$view.draggable({containment: this.$thumbnail, scroll: false });
+
+			// Set default navigaion view size
+			this.setView();
+
+			// Hook cy zoom
+			this.$element.cytoscape('get').on('zoom pan', function () {
+				that.setView();
+			})
+			// TODO hook cy move/pan
+		}
+
+	, setView: function () {
+			var width = 0
+				, height = 0
+				, position = {left: 0, top: 0}
+				, visible = true
+				// thumbnail available sizes
+				, borderDouble = this.options.view.borderWidth * 2
+				, thumbnailWidth = this.$thumbnail.width() - borderDouble
+				, thumbnailHeight = this.$thumbnail.height() - borderDouble
+				// cy wieport sizes
+				, cy = this.$element.cytoscape('get')
+				, cyZoom = cy.zoom()
+				, cyPan = cy.pan()
+				, elementWidth = this.$element.width()
+				, elementHeight = this.$element.height()
+				, cyWidth = elementWidth * cyZoom
+				, cyHeight = elementHeight * cyZoom
+				;
+
+			if( cyPan.x > elementWidth || cyPan.x < -cyWidth || cyPan.y > elementHeight || cyPan.y < -cyHeight) {
+				visible = false;
+				this.$view.hide();
+			} else {
+				visible = true;
+
+				// Horizontal computation
+				position.left = -thumbnailWidth * (cyPan.x / cyWidth);
+				position.right = position.left + (thumbnailWidth / cyZoom);
+
+				// Limit view inside thumbnails borders
+				position.left = Math.max(0, position.left);
+				position.right = Math.min(thumbnailWidth, position.right);
+
+				// Compute width and remove position.right
+				width = position.right - position.left;
+				delete position.right;
+
+				// Vertical computation
+				position.top = -thumbnailHeight * (cyPan.y / cyHeight);
+				position.bottom = position.top + (thumbnailHeight / cyZoom);
+
+				// Limit view inside thumbnails borders
+				position.top = Math.max(0, position.top);
+				position.bottom = Math.min(thumbnailHeight, position.bottom);
+
+				// Compute width and remove position.right
+				height = position.bottom - position.top;
+				delete position.bottom;
+
+				// Set computed values
+				this.$view.show().width(width).height(height).css(position);
+			}
+
 		}
 
 	}
