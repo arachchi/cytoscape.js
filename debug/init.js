@@ -258,6 +258,7 @@ $(function(){
 				, size: {
 						height: 300
 					}
+				, live: false
 				});
 			});
 

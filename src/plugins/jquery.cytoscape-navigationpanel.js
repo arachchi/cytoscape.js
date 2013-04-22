@@ -95,14 +95,17 @@
 			this.$view.draggable({
 				containment: this.$thumbnail
 			, scroll: false
-			, start: function () {
-					// body...
-				}
+			, start: function () {}
 			, drag: function () {
-					that.moveCy();
+					if( that.options.live ) {
+						// TODO move only when cy fineshed previous rendering
+						that.moveCy();
+					}
 				}
 			, stop: function () {
-					// body...
+					if( !that.options.live ) {
+						that.moveCy();
+					}
 				}
 			});
 
@@ -184,7 +187,6 @@
 				// cy wieport sizes
 				, cy = this.$element.cytoscape('get')
 				, cyZoom = cy.zoom()
-				, cyPan = cy.pan()
 				, cyPanNew = {x: 0, y: 0}
 				, elementWidth = this.$element.width()
 				, elementHeight = this.$element.height()
@@ -229,6 +231,7 @@
 	, view: {
 			borderWidth: 1
 		}
+	, live: true // if true than cy is moved when dragging, otherwise it will be done when dragging was finished
 	};
 
 	$.fn.cyNavigationPanel = $.fn.cytoscapeNavigationPanel;
