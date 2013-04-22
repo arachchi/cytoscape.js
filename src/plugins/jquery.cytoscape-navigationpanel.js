@@ -92,7 +92,19 @@
 
 			// Make navigation view draggable
 			// TODO get rid of jQuery UI 
-			this.$view.draggable({containment: this.$thumbnail, scroll: false });
+			this.$view.draggable({
+				containment: this.$thumbnail
+			, scroll: false
+			, start: function () {
+					// body...
+				}
+			, drag: function () {
+					that.moveCy();
+				}
+			, stop: function () {
+					// body...
+				}
+			});
 
 			// Set default navigaion view size
 			this.setView();
@@ -157,6 +169,33 @@
 				this.$view.show().width(width).height(height).css(position);
 			}
 
+		}
+
+	, moveCy: function () {
+			var that = this
+				,	position = {
+						left: parseFloat(that.$view.css('left'))
+					, top: parseFloat(that.$view.css('top'))
+					}
+				// thumbnail available sizes
+				, borderDouble = this.options.view.borderWidth * 2
+				, thumbnailWidth = this.$thumbnail.width() - borderDouble
+				, thumbnailHeight = this.$thumbnail.height() - borderDouble
+				// cy wieport sizes
+				, cy = this.$element.cytoscape('get')
+				, cyZoom = cy.zoom()
+				, cyPan = cy.pan()
+				, cyPanNew = {x: 0, y: 0}
+				, elementWidth = this.$element.width()
+				, elementHeight = this.$element.height()
+				, cyWidth = elementWidth * cyZoom
+				, cyHeight = elementHeight * cyZoom
+				;
+
+			cyPanNew.x = -position.left * cyWidth / thumbnailWidth;
+			cyPanNew.y = -position.top * cyHeight / thumbnailHeight;
+
+			cy.pan(cyPanNew);
 		}
 
 	}
