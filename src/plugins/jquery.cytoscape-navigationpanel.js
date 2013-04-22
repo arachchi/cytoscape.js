@@ -23,7 +23,7 @@
 	, initPanel: function () {
 			var options = this.options;
 
-			if( options.contaier ) {
+			if( options.container ) {
 				if( options.container instanceof jQuery ){
 					if( options.container.length > 0 ){
 						this.$panel = options.container.first();

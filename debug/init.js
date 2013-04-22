@@ -249,7 +249,7 @@ $(function(){
 				}
 			}).cy(function () {
 				$container2.cytoscapeNavigationPanel({
-					container: "#cytoscape2Navigaionpanel"
+					container: "#cytoscape2NavigationPanel"
 				, forceClassName: false
 				, position: {
 						horizontal: 600
