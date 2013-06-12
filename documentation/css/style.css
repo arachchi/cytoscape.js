@@ -3,6 +3,87 @@ body {
 	line-height: 1.5;
 }
 
+#cy {
+	position: fixed;
+	z-index: 99999;
+	right: 0;
+	bottom: 0;
+	height: 300px;
+	width: 300px;
+	box-shadow: 0 0 1em rgba(0, 0, 0, 0.5);
+	background: rgba(255, 255, 255, 0.5);
+}
+
+#cy-title {
+	position: fixed;
+	right: 0;
+	bottom: 300px;
+	width: 300px;
+	overflow: hidden;
+	color: rgba(0, 0, 0, 0.5);
+	text-align: left;
+	font-family: Andale Mono, monospace;
+	font-size: 0.8em;
+}
+
+#cy-title .content {
+	width: 9999px;
+}
+
+#cy-title pre {
+	border: 0;
+	background: transparent;
+}
+
+#cy-refresh,
+#cy-show,
+#cy-hide {
+	position: fixed;
+	bottom: 270px;
+	right: 270px;
+	background: #fff;
+	border-radius: 1em;
+	line-height: 1;
+	padding: 4px 6px;
+	color: rgba(0, 0, 0, 0.75);
+	cursor: pointer;
+	z-index: 999999;
+}
+
+#cy-hide,
+#cy-show {
+	right: 0;
+	bottom: 0;
+}
+
+#cy-show {
+	box-shadow: 0 0 1em rgba(0, 0, 0, 0.5);
+	background: rgba(255, 255, 255, 0.5);
+	border-radius: 0;
+	display: none;
+}
+
+button {
+	font: inherit;
+	border: 0;
+	background: #4183C4;
+	border-radius: 0.25em;
+	color: #fff;
+	cursor: pointer;
+}
+
+button:active {
+	background: #2B4C6E;
+}
+
+.run {
+	margin-bottom: 0;
+}
+
+.run + * {
+	margin-top: 0.25em;
+}
+
 #navigation {
 	position: fixed;
 	left: 0;
@@ -90,21 +171,27 @@ body {
 
 
 #demo, #demo-source {
-	height: 20em;
 	border: 1px solid #ddd;
 	margin: 1em 0;
-	overflow: hidden !important;
 	border-radius: 0.25em;
 	margin: 0.25em;
+	overflow: hidden !important;
 }
 
 #demo {
+	height: 20em;
+	width: 20em;
 	float: left;
-	width: 30em;
 }
 
 #demo-source {
-	margin-top: 1.2em;
+	height: 20em;
+	overflow: auto;
+}
+
+#demo-source + * {
+	clear: both;
+	padding-top: 1em;
 }
 
 #demo-code {
@@ -225,19 +312,20 @@ pre {
 	font-family: Consolas, monospace;
 	border: 1px solid #ddd;
 	border-radius: 0.25em;
-	font-size: 0.76em;
+	font-size: 1em;
 	background: #fafafa;
 }
 
 pre {
 	margin: 1.25em 0;
 	overflow: auto;
+	-webkit-overflow-scrolling: touch;
 }
 
 pre code {
 	background: transparent;
 	border: 0;
-	font-size: 1em;
+	font-size: 0.8em;
 }
 
 .function .formats ul {
@@ -245,13 +333,12 @@ pre code {
 }
 
 .function pre {
-	font-size: 0.8em;
+	
 }
 
 .function {
-	border-top: 1px solid #eaeaea;
 	padding: 1em 0;
-	border-bottom: 1px solid #eaeaea;
+	border-bottom: 1px dashed #bbb;
 }
 
 .function + .function {

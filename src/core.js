@@ -1,5 +1,16 @@
 ;(function($$){
+
+	var defaults = {
+		showOverlay: true,
+		hideEdgesOnViewport: false
+	};
 	
+	var origDefaults = $$.util.copy( defaults );
+
+	$$.defaults = function( opts ){
+		defaults = $$.util.extend({}, origDefaults, opts);
+	};
+
 	$$.fn.core = function( fnMap, options ){
 		for( var name in fnMap ){
 			var fn = fnMap[name];
@@ -13,14 +24,18 @@
 		}
 		var cy = this;
 
+		opts = $$.util.extend({}, defaults, opts);
+
 		var container = opts.container;
 		var reg = $$.getRegistrationForInstance(cy, container);
-		if( reg ){ // already registered => just update ref
-			reg.cy = this;
-			reg.domElement = container;
-		} else { // then we have to register
-			reg = $$.registerInstance( cy, container );
-		}
+		if( reg && reg.cy ){ 
+			reg.domElement.innerHTML = '';
+			reg.cy.notify({ type: 'destroy' }); // destroy the renderer
+
+			$$.removeRegistrationForInstance(reg.cy, reg.domElement);
+		} 
+
+		reg = $$.registerInstance( cy, container );
 		var readies = reg.readies;
 
 		var options = opts;
@@ -36,7 +51,7 @@
 		
 		this._private = {
 			ready: false, // whether ready has been triggered
-			instanceId: null, // the registered instance id
+			instanceId: reg.id, // the registered instance id
 			options: options, // cached options
 			elements: [], // array of elements
 			id2index: {}, // element id => index in elements array
@@ -55,7 +70,8 @@
 			pan: {
 				x: $$.is.plainObject(options.pan) && $$.is.number(options.pan.x) ? options.pan.x : 0,
 				y: $$.is.plainObject(options.pan) && $$.is.number(options.pan.y) ? options.pan.y : 0,
-			}
+			},
+			hasCompoundNodes: false
 		};
 
 		// init zoom bounds
@@ -71,7 +87,10 @@
 		// init style
 		this._private.style = $$.is.stylesheet(options.style) ? options.style.generateStyle(this) : new $$.Style( cy );
 
-		cy.initRenderer( options.renderer );
+		cy.initRenderer( $$.util.extend({
+			showOverlay: options.showOverlay,
+			hideEdgesOnViewport: options.hideEdgesOnViewport
+		}, options.renderer) );
 
 		// initial load
 		cy.load(options.elements, function(){ // onready
@@ -124,6 +143,10 @@
 			return new $$.Collection( this );
 		},
 
+		hasCompoundNodes: function(){
+			return this._private.hasCompoundNodes;
+		},
+
 		addToPool: function( eles ){
 			var elements = this._private.elements;
 			var id2index = this._private.id2index;
@@ -139,6 +162,7 @@
 					index = elements.length;
 					elements.push( ele )
 					id2index[ id ] = index;
+					ele._private.index = index;
 				}
 			}
 

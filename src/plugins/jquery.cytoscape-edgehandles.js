@@ -380,7 +380,9 @@
 						
 						//console.log("mouseover startHandler %s %o", this.id(), this);
 						
-						$canvas.unbind('mousedown', lastMdownHandler);
+						if( lastMdownHandler ){
+							$container[0].removeEventListener('mousedown', lastMdownHandler, true);
+						}
 
 						var node = this;
 						var source = this;
@@ -403,6 +405,8 @@
 						
 
 						function mdownHandler(e){
+							$container[0].removeEventListener('mousedown', mdownHandler, true);
+
 							var x = e.pageX - $container.offset().left;
 							var y = e.pageY - $container.offset().top;
 
@@ -467,7 +471,7 @@
 							return false;
 						}
 
-						$canvas.one('mousedown', mdownHandler);
+						$container[0].addEventListener('mousedown', mdownHandler, true);
 						lastMdownHandler = mdownHandler;
 
 						
@@ -557,9 +561,11 @@
 						node.trigger('cyedgehandles.showhandle');
 
 						// case: down and drag as normal
-						var downHandler;
-						$canvas.one("mousedown touchstart", downHandler = function(e){
+						var downHandler = function(e){
 							
+							$container[0].removeEventListener('mousedown', downHandler, true);
+							$container[0].removeEventListener('touchstart', downHandler, true);
+
 							var x = (e.pageX !== undefined ? e.pageX : e.originalEvent.touches[0].pageX) - $container.offset().left;
 							var y = (e.pageY !== undefined ? e.pageY : e.originalEvent.touches[0].pageY) - $container.offset().top;
 							var d = hr/2;
@@ -570,18 +576,21 @@
 								disableGestures();
 								mdownOnHandle = true; // enable the regular logic for handling going over target nodes
 								
-								var moveHandler;
-								$canvas.bind("mousemove touchmove", moveHandler = function(me){
+								var moveHandler = function(me){
 									var x = (me.pageX !== undefined ? me.pageX : me.originalEvent.touches[0].pageX) - $container.offset().left;
 									var y = (me.pageY !== undefined ? me.pageY : me.originalEvent.touches[0].pageY) - $container.offset().top;
 
 									clearDraws();
 									drawHandle(hx, hy, hr);
 									drawLine(hx, hy, x, y);
-								});
+								}
+
+								$container[0].addEventListener('mousemove', moveHandler, true);
+								$container[0].addEventListener('touchmove', moveHandler, true);
 
 								$(window).one("mouseup touchend blur", function(){
-									$canvas.unbind("mousemove touchmove", moveHandler);
+									$container[0].removeEventListener('mousemove', moveHandler, true);
+									$container[0].removeEventListener('touchmove', moveHandler, true);
 
 									inForceStart = false; // now we're done so reset the flag
 									mdownOnHandle = false; // we're also no longer down on the node
@@ -600,11 +609,15 @@
 								e.preventDefault();
 								return false;
 							}
-						});
+						};
+
+						$container[0].addEventListener('mousedown', downHandler, true);
+						$container[0].addEventListener('touchstart', downHandler, true);
 
 						var removeBeforeHandler;
 						node.one("remove", function(){
-							$canvas.unbind("mousedown touchstart", downHandler);
+							$container[0].removeEventListener('mousedown', downHandler, true);
+							$container[0].removeEventListener('touchstart', downHandler, true);
 							cy.off("tap", "node", tapHandler);
 						});
 
@@ -619,8 +632,8 @@
 							if( !isLoop || (isLoop && loopAllowed) ){							
 								makeEdges(false, source, target);
 
-								options().complete( node );
-								node.trigger('cyedgehandles.complete');	
+								//options().complete( node );
+								//node.trigger('cyedgehandles.complete');	
 							}
 
 							inForceStart = false; // now we're done so reset the flag
@@ -628,7 +641,8 @@
 							options().stop( node );
 							node.trigger('cyedgehandles.stop');
 
-							$canvas.unbind("mousedown touchstart", downHandler);
+							$container[0].removeEventListener('mousedown', downHandler, true);
+							$container[0].removeEventListener('touchstart', downHandler, true);
 							node.off("remove", removeBeforeHandler);
 							resetToDefaultState();
 						});

@@ -86,6 +86,7 @@
 			group: params.group, // string; "nodes" or "edges"
 			style: {}, // properties as set by the style
 			rstyle: {}, // properties for style sent from the renderer to the core
+			styleCxts: [], // applied style contexts from the styler
 			removed: true, // whether it's inside the vis; true if removed (set true here since we call restore)
 			selected: params.selected ? true : false, // whether it's selected
 			selectable: params.selectable === undefined ? true : ( params.selectable ? true : false ), // whether it's selectable
@@ -253,8 +254,7 @@
 			locked: p.locked,
 			grabbed: p.grabbed,
 			grabbable: p.grabbable,
-			classes: "",
-			scratch: p.scratch
+			classes: ""
 		});
 		
 		var classes = [];
@@ -282,6 +282,7 @@
 		// create arrays of nodes and edges, since we need to
 		// restore the nodes first
 		var elements = [];
+		var nodes = [], edges = [];
 		var numNodes = 0;
 		var numEdges = 0;
 		for( var i = 0, l = self.length; i < l; i++ ){
@@ -289,13 +290,15 @@
 			
 			// keep nodes first in the array and edges after
 			if( ele.isNode() ){ // put to front of array if node
-				elements.unshift( ele );
+				nodes.push( ele );
 				numNodes++;
 			} else { // put to end of array if edge
-				elements.push( ele );
+				edges.push( ele );
 				numEdges++;
 			}
 		}
+
+		elements = nodes.concat( edges );
 
 		// now, restore each element
 		for( var i = 0, l = elements.length; i < l; i++ ){
@@ -393,6 +396,9 @@
 					if( !selfAsParent ){
 						// connect with children
 						parent[0]._private.children.push( node );
+
+						// let the core know we have a compound graph
+						cy._private.hasCompoundNodes = true;
 					}
 				} // else
 			} // if specified parent
@@ -401,8 +407,8 @@
 		restored = new $$.Collection( cy, restored );
 		if( restored.length > 0 ){
 
-			restored.updateStyle( false ); // when we restore/add elements, they need their style
-			restored.connectedNodes().updateStyle( notifyRenderer ); // may need to update style b/c of {degree} selectors
+			var toUpdateStyle = restored.add( restored.connectedNodes() ).add( restored.parent() );
+			toUpdateStyle.updateStyle( notifyRenderer );
 
 			if( notifyRenderer ){
 				restored.rtrigger("add");
@@ -492,6 +498,19 @@
 			}
 		}
 
+		function removeChildRef(parent, ele){
+			ele = ele[0];
+			parent = parent[0];
+			var children = parent._private.children;
+
+			for( var j = 0; j < children.length; j++ ){
+				if( children[j][0] === ele[0] ){
+					children.splice(j, 1);
+					break;
+				}
+			}
+		}
+
 		for( var i = 0; i < elesToRemove.length; i++ ){
 			var ele = elesToRemove[i];
 
@@ -510,6 +529,25 @@
 
 				removeEdgeRef( src, ele );
 				removeEdgeRef( tgt, ele );
+
+			} else { // remove reference to parent 
+				var parent = ele.parent();
+
+				if( parent.length !== 0 ){
+					removeChildRef(parent, ele);
+				}
+			}
+		}
+
+		// check to see if we have a compound graph or not
+		var elesStillInside = cy._private.elements;
+		cy._private.hasCompoundNodes = false;
+		for( var i = 0; i < elesStillInside.length; i++ ){
+			var ele = elesStillInside[i];
+
+			if( ele.isParent() ){
+				cy._private.hasCompoundNodes = true;
+				break;
 			}
 		}
 
@@ -538,10 +576,7 @@
 				checkedParentId[ parentId ] = true;
 				var parent = cy.getElementById( parentId );
 
-				if( parent && parent.length !== 0 &&
-				    !parent._private.removed &&
-				    parent.children().not(":removed").length === 0 )
-				{
+				if( parent && parent.length !== 0 && !parent._private.removed && parent.children().length === 0 ){
 					parent.updateStyle();
 				}
 			}

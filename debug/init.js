@@ -2,7 +2,7 @@ $(function(){
 				
 	var height, width;
 	
-	var defaultSty = cytoscape.stylesheet()
+	var defaultSty = window.defaultSty = cytoscape.stylesheet()
 			.selector("node")
 				.css({
 					"content": "data(id)",
@@ -20,6 +20,11 @@ $(function(){
 					"padding-top": 5,
 					"padding-bottom": 30
 				})
+			.selector("node[id='non-auto']") // to init a non-auto sized compound
+				.css({"width": 100,
+					"height": 50,
+					"shape": "triangle"
+			    })
 			.selector("edge")
 				.css({
 					"width": "mapData(weight, 0, 100, 1, 4)",
@@ -153,6 +158,26 @@ $(function(){
 				console.log("stop(%o)", sourceNode);
 			}
 		});
+
+		$container.cxtmenu({
+			selector: 'node',
+			commands: [
+				{
+					content: 'Connect',
+					select: function(){
+						$('#cytoscape').cytoscapeEdgehandles('start', this.id());
+					}
+				},
+
+				{
+					content: 'Delete',
+					select: function(){
+						this.remove();
+					}
+				}
+
+			]
+		});
 		
 		function number(group){
 			var input = $("#" + group + "-number");
@@ -217,7 +242,6 @@ $(function(){
 
 //		$container2.cy(options);
 
-
 		// compound graph in the second instance
 		$container2.cy({
 				elements: {
@@ -229,7 +253,8 @@ $(function(){
 				       { data: { id: 'n2' } },
 				       { data: { id: 'node6', parent: 'n2' } },
 				       { data: { id: 'n7', parent: 'n2', shape: 'square' } },
-					   { data: { id: 'n3', shape: 'rectangle' } }],
+					   { data: { id: 'n3', parent: 'non-auto', shape: 'rectangle' } },
+					   { data: { id: 'non-auto'}}],
 				   edges: [ { data: { id: 'e1', source: 'n1', target: 'n3' } },
 				       { data: { id: 'e2', source: 'n3', target: 'n7' } },
 				       { data: { id: 'e3', source: 'node6', target: 'n7' } },

@@ -1,16 +1,18 @@
 (function($$) {
 
-
 	var isTouch = ('ontouchstart' in window) || window.DocumentTouch && document instanceof DocumentTouch;
 	var time = function() { return Date.now(); } ; 
 	var arrowShapes = {}; var nodeShapes = {}; 
 	var rendFunc = CanvasRenderer.prototype;
+	var panOrBoxSelectDelay = 400;
 
 	// Canvas layer constants
-	var CANVAS_LAYERS = 5, SELECT_BOX = 0, DRAG = 2, NODE = 4, BUFFER_COUNT = 2;
+	var CANVAS_LAYERS = 5, SELECT_BOX = 0, DRAG = 2, OVERLAY = 3, NODE = 4, BUFFER_COUNT = 2;
 	
 	function CanvasRenderer(options) {
 		
+		this.options = options;
+
 		this.data = {
 				
 			select: [undefined, undefined, undefined, undefined, 0], // Coordinates for selection box, plus enabled flag 
@@ -50,6 +52,8 @@
 		//--
 		
 		this.redraws = 0;
+
+		this.bindings = [];
 		
 		this.init();
 		
@@ -67,6 +71,7 @@
 		this.data.canvases[NODE].setAttribute("data-id", "layer" + NODE + '-node');
 		this.data.canvases[SELECT_BOX].setAttribute("data-id", "layer" + SELECT_BOX + '-selectbox');
 		this.data.canvases[DRAG].setAttribute("data-id", "layer" + DRAG + '-drag');
+		this.data.canvases[OVERLAY].setAttribute("data-id", "layer" + OVERLAY + '-overlay');
 		
 		for (var i = 0; i < BUFFER_COUNT; i++) {
 			this.data.bufferCanvases[i] = document.createElement("canvas");
@@ -76,10 +81,47 @@
 			this.data.bufferCanvases[i].style.visibility = "visible";
 			this.data.container.appendChild(this.data.bufferCanvases[i]);
 		}
+
+		var overlay = document.createElement('div');
+		this.data.container.appendChild( overlay );
+		this.data.overlay = overlay;
+		overlay.style.position = 'absolute';
+		overlay.style.zIndex = 1000;
+
+		if( options.showOverlay ){
+
+			var link = document.createElement('a');
+			overlay.appendChild( link );
+			this.data.link = link;
+
+			link.innerHTML = 'cytoscape.js';
+			link.style.font = '14px helvetica';
+			link.style.position = 'absolute';
+			link.style.right = 0;
+			link.style.bottom = 0;
+			link.style.padding = '1px 3px';
+			link.style.paddingLeft = '5px';
+			link.style.paddingTop = '5px';
+			link.style.opacity = 0;
+			link.style['-webkit-tap-highlight-color'] = 'transparent';
+			link.style.background = 'red';
+
+			link.href = 'http://cytoscape.github.io/cytoscape.js/';
+			link.target = '_blank';
+
+		}
+
+		this.hideEdgesOnViewport = options.hideEdgesOnViewport;
+
+		this.load();
 	}
 
 	CanvasRenderer.prototype.notify = function(params) {
-		if (params.type == "add"
+		if ( params.type == "destroy" ){
+			this.destroy();
+			return;
+
+		} else if (params.type == "add"
 			|| params.type == "remove"
 			|| params.type == "load"
 		) {
@@ -87,8 +129,6 @@
 			this.updateNodesCache();
 			this.updateEdgesCache();
 		}
-		
-		if (params.type == "load") {this.load(); }
 
 		if (params.type == "viewport") {
 			this.data.canvasNeedsRedraw[SELECT_BOX] = true;
@@ -100,6 +140,28 @@
 
 		this.redraws++;
 		this.redraw();
+	};
+
+	CanvasRenderer.prototype.registerBinding = function(target, event, handler, useCapture){
+		this.bindings.push({
+			target: target,
+			event: event,
+			handler: handler,
+			useCapture: useCapture
+		});
+
+		target.addEventListener(event, handler, useCapture);
+	};
+
+	CanvasRenderer.prototype.destroy = function(){
+		this.destroyed = true;
+
+		for( var i = 0; i < this.bindings.length; i++ ){
+			var binding = this.bindings[i];
+			var b = binding;
+
+			b.target.removeEventListener(b.event, b.handler, b.useCapture);
+		}
 	};
 	
 	
@@ -152,12 +214,27 @@
 
 			var innerNodes = node.descendants();
 
+			function hasNonAutoParent(ele){
+				while( ele.parent().nonempty() && ele.parent().id() !== node.id() ){
+					parent = ele.parent()[0];
+					var pstyle = parent._private.style;
+
+					if( pstyle.width.value !== 'auto' || pstyle.height.value !== 'auto' ){
+						return true;
+					}
+
+					ele = ele.parent();
+				}
+
+				return false;
+			}
+
 			// TODO do not drag hidden children & children of hidden children?
 			for (var i=0; i < innerNodes.size(); i++)
 			{
 				// if addSelected is true, then add node in any case,
 				// if not, then add only non-selected nodes
-				if (addSelected || !innerNodes[i]._private.selected)
+				if ( (addSelected || !innerNodes[i]._private.selected) )
 				{
 					innerNodes[i]._private.rscratch.inDragLayer = true;
 					//innerNodes[i].trigger(new $$.Event(e, {type: "grab"}));
@@ -195,6 +272,12 @@
 			while (parent.parent().nonempty())
 			{
 				parent = parent.parent()[0];
+
+				// var pstyle = parent._private.style;
+				// if( pstyle.width.value !== 'auto' || pstyle.height.value !== 'auto' ){
+				// 	parent = node;
+				// 	break;
+				// }
 			}
 
 			// no parent node: no node to add to the drag layer
@@ -207,6 +290,7 @@
 
 			for (var i=0; i < nodes.size(); i++)
 			{
+
 				nodes[i]._private.rscratch.inDragLayer = inDragLayer;
 
 				// TODO when calling this function for a set of nodes, we visit same edges over and over again,
@@ -230,13 +314,21 @@
 			return false;
 		}
 
+		// auto resize
+		r.registerBinding(window, "resize", function(e) { 
+			r.data.canvasNeedsRedraw[NODE] = true;
+			r.data.canvasNeedsRedraw[OVERLAY] = true;
+			r.matchCanvasSize( r.data.container );
+			r.redraw();
+		}, true);
+
 		// stop right click menu from appearing on cy
-		r.data.container.addEventListener("contextmenu", function(e){
+		r.registerBinding(r.data.container, "contextmenu", function(e){
 			e.preventDefault();
 		});
 
 		// Primary key
-		r.data.container.addEventListener("mousedown", function(e) {
+		r.registerBinding(r.data.container, "mousedown", function(e) { 
 			e.preventDefault();
 			r.hoverData.capture = true;
 			r.hoverData.which = e.which;
@@ -348,7 +440,7 @@
 				// Selection box
 				if ( near == null || near.isEdge() ) {
 					select[4] = 1;
-					var timeUntilActive = Math.max( 0, 400 - (+new Date - r.hoverData.downTime) );
+					var timeUntilActive = Math.max( 0, panOrBoxSelectDelay - (+new Date - r.hoverData.downTime) );
 
 					clearTimeout( r.bgActiveTimeout );
 					r.bgActiveTimeout = setTimeout(function(){
@@ -379,8 +471,21 @@
 			
 		}, false);
 		
-		window.addEventListener("mousemove", function(e) {
+		r.registerBinding(window, "mousemove", function(e) {
 			var preventDefault = false;
+			var capture = r.hoverData.capture;
+
+			if (!capture) {
+				
+				var containerPageCoords = r.findContainerPageCoords();
+				
+				if (e.pageX > containerPageCoords[0] && e.pageX < containerPageCoords[0] + r.data.container.clientWidth
+					&& e.pageY > containerPageCoords[1] && e.pageY < containerPageCoords[1] + r.data.container.clientHeight) {
+					
+				} else {
+					return;
+				}
+			}
 
 			var cy = r.data.cy;
 			var pos = r.projectIntoViewport(e.pageX, e.pageY);
@@ -395,22 +500,10 @@
 			var edges = r.getCachedEdges();
 		
 			var draggedElements = r.dragData.possibleDragElements;
-			
-			var capture = r.hoverData.capture;
+		
 
 			var shiftDown = e.shiftKey;
 			
-			if (!capture) {
-				
-				var containerPageCoords = r.findContainerPageCoords();
-				
-				if (e.pageX > containerPageCoords[0] && e.pageX < containerPageCoords[0] + r.data.container.clientWidth
-					&& e.pageY > containerPageCoords[1] && e.pageY < containerPageCoords[1] + r.data.container.clientHeight) {
-					
-				} else {
-					return;
-				}
-			}
 
 			preventDefault = true;
 
@@ -452,9 +545,10 @@
 				
 				// Needs reproject due to pan changing viewport
 				pos = r.projectIntoViewport(e.pageX, e.pageY);
+
 			// Checks primary button down & out of time & mouse not moved much
 			} else if (select[4] == 1 && (down == null || down.isEdge())
-					&& ( !cy.boxSelectionEnabled() || (new Date()).getTime() - r.hoverData.downTime > 400 )
+					&& ( !cy.boxSelectionEnabled() || +new Date - r.hoverData.downTime >= panOrBoxSelectDelay )
 					&& (Math.abs(select[3] - select[1]) + Math.abs(select[2] - select[0]) < 4)
 					&& cy.panningEnabled() ) {
 				
@@ -462,7 +556,11 @@
 				select[4] = 0;
 
 			} else {
-				clearTimeout( r.bgActiveTimeout );
+				// deactivate bg on box selection
+				if (cy.boxSelectionEnabled() && Math.pow(select[2] - select[0], 2) + Math.pow(select[3] - select[1], 2) > 7 && select[4]){
+					clearTimeout( r.bgActiveTimeout );
+				}
+				
 				if( down && down.isEdge() && down.active() ){ down.unactivate(); }
 
 				if (near != last) {
@@ -526,7 +624,7 @@
     		}
 		}, false);
 		
-		window.addEventListener("mouseup", function(e) {
+		r.registerBinding(window, "mouseup", function(e) {
 			// console.log('--\nmouseup', e)
 
 			var capture = r.hoverData.capture; if (!capture) { return; }; r.hoverData.capture = false;
@@ -757,42 +855,50 @@
 			if (r.zoomData.freeToZoom) {
 				e.preventDefault();
 				
-				var diff = e.wheelDeltaY / 1000 || e.detail / -8.4;
+				var diff = e.wheelDeltaY / 1000 || e.detail / -32;
 				
 				if( cy.panningEnabled() && cy.zoomingEnabled() ){
 					cy.zoom({level: cy.zoom() * Math.pow(10, diff), position: {x: unpos[0], y: unpos[1]}});
 				}
+
+				r.data.wheel = true;
+				clearTimeout(r.data.wheelTimeout);
+				r.data.wheelTimeout = setTimeout(function(){
+					r.data.wheel = false;
+					r.data.canvasNeedsRedraw[NODE] = true;
+					r.redraw();
+				}, 100);
 			}
 
 		}
 		
 		// Functions to help with whether mouse wheel should trigger zooming
 		// --
-		r.data.container.addEventListener("mousewheel", wheelHandler, true);
-		r.data.container.addEventListener("DOMMouseScroll", wheelHandler, true);
-		r.data.container.addEventListener("MozMousePixelScroll", function(e){
+		r.registerBinding(r.data.container, "mousewheel", wheelHandler, true);
+		r.registerBinding(r.data.container, "DOMMouseScroll", wheelHandler, true);
+		r.registerBinding(r.data.container, "MozMousePixelScroll", function(e){
 			if (r.zoomData.freeToZoom) {
 				e.preventDefault();
 			}
 		}, false);
 		
-		r.data.container.addEventListener("mousemove", function(e) { 
+		r.registerBinding(r.data.container, "mousemove", function(e) { 
 			if (r.zoomData.lastPointerX && r.zoomData.lastPointerX != e.pageX && !r.zoomData.freeToZoom) 
 				{ r.zoomData.freeToZoom = true; } r.zoomData.lastPointerX = e.pageX; 
 		}, false);
 		
-		r.data.container.addEventListener("mouseout", function(e) { 
+		r.registerBinding(r.data.container, "mouseout", function(e) { 
 			r.zoomData.freeToZoom = false; r.zoomData.lastPointerX = null 
 		}, false);
 		// --
 		
 		// Functions to help with handling mouseout/mouseover on the Cytoscape container
 					// Handle mouseout on Cytoscape container
-		r.data.container.addEventListener("mouseout", function(e) { 
+		r.registerBinding(r.data.container, "mouseout", function(e) { 
 			r.data.cy.trigger(new $$.Event(e, {type: "mouseout"}));
 		}, false);
 		
-		r.data.container.addEventListener("mouseover", function(e) { 
+		r.registerBinding(r.data.container, "mouseover", function(e) { 
 			r.data.cy.trigger(new $$.Event(e, {type: "mouseover"}));
 		}, false);
 		
@@ -807,8 +913,11 @@
 			return Math.sqrt( (x2-x1)*(x2-x1) + (y2-y1)*(y2-y1) );
 		}
 
-		r.data.container.addEventListener("touchstart", function(e) {
-			e.preventDefault();
+		r.registerBinding(r.data.container, "touchstart", function(e) {
+
+			if( e.target !== r.data.link ){
+				e.preventDefault();
+			}
 		
 			r.touchData.capture = true;
 			r.data.bgActivePosistion = undefined;
@@ -1032,7 +1141,7 @@
 		
 // console.log = function(m){ $('#console').append('<div>'+m+'</div>'); };
 
-		window.addEventListener("touchmove", function(e) {
+		r.registerBinding(window, "touchmove", function(e) {
 		
 			var select = r.data.select;
 			var capture = r.touchData.capture; //if (!capture) { return; }; 
@@ -1058,10 +1167,17 @@
 
 				// cancel ctx gestures if the distance b/t the fingers increases
 				if( factor >= 1.5 || distance2 >= 150 ){
-					 r.touchData.cxt = false;
-					 if( r.touchData.start ){ r.touchData.start.unactivate(); r.touchData.start = null; }
-					 r.data.bgActivePosistion = undefined;
-					 r.data.canvasNeedsRedraw[SELECT_BOX] = true;
+					r.touchData.cxt = false;
+					if( r.touchData.start ){ r.touchData.start.unactivate(); r.touchData.start = null; }
+					r.data.bgActivePosistion = undefined;
+					r.data.canvasNeedsRedraw[SELECT_BOX] = true;
+
+					var cxtEvt = new $$.Event(e, {type: "cxttapend"});
+					if( r.touchData.start ){
+						r.touchData.start.trigger( cxtEvt );
+					} else {
+						cy.trigger( cxtEvt );
+					}
 				}
 
 			}  
@@ -1104,6 +1220,7 @@
 
 			} else if ( capture && e.touches[1] && cy.zoomingEnabled() && cy.panningEnabled() ) { // two fingers => pinch to zoom
 				r.data.bgActivePosistion = undefined;
+				r.data.canvasNeedsRedraw[SELECT_BOX] = true;
 
 				// console.log('touchmove ptz');
 
@@ -1265,6 +1382,7 @@
 					}
 
 					cy.panBy({x: disp[0] * cy.zoom(), y: disp[1] * cy.zoom()});
+					r.swipePanning = true;
 					
 					// Re-project
 					var pos = r.projectIntoViewport(e.touches[0].pageX, e.touches[0].pageY);
@@ -1277,11 +1395,13 @@
 			
 		}, false);
 		
-		window.addEventListener("touchend", function(e) {
+		r.registerBinding(window, "touchend", function(e) {
 			
 			var capture = r.touchData.capture; if (!capture) { return; }; r.touchData.capture = false;
 			e.preventDefault();
 			var select = r.data.select;
+
+			r.swipePanning = false;
 			
 			var cy = r.data.cy; 
 			var nodes = r.getCachedNodes(); var edges = r.getCachedEdges();
@@ -1682,7 +1802,9 @@
 					 { addCurrentEdge = true; }
 			
 			} else if (rs.edgeType == "straight") {
-				if (Math.pow(edges[i]._private.style["width"].value / 2, 2) + edgeThreshold >
+				if (this.inLineVicinity(x, y, rs.startX, rs.startY, rs.endX, rs.endY, edges[i]._private.style["width"].value * 2)
+						&&
+					Math.pow(edges[i]._private.style["width"].value / 2, 2) + edgeThreshold >
 					this.sqDistanceToFiniteLine(x, y,
 						rs.startX,
 						rs.startY,
@@ -1765,25 +1887,9 @@
 			}
 		} 
 		
-		near.sort(function(a, b) {
+		near.sort( zOrderSort );
 		
-			var zIndexCompare = b._private.style["z-index"].value - a._private.style["z-index"].value;
-			// Reverse id order, same as given by cy.nodes()
-			var idCompare = b._private.data.id.localeCompare(a._private.data.id);
-			var nodeEdgeTypeCompare = (function(a, b){
-				if (a.isEdge() && b.isNode()) {
-					return 1;
-				} else if (a.isNode() && b.isEdge()) {
-					return -1;
-				}
-				
-				return 0;
-			})(a, b);
-			
-			return zIndexCompare || nodeEdgeTypeCompare || idCompare;
-		});
-		
-		if (near.length > 0) { return near[0]; } else { return null; }
+		if (near.length > 0) { return near[ near.length - 1 ]; } else { return null; }
 	}
 	
 	// "Give me everything from this box"
@@ -1807,7 +1913,7 @@
 						edges[i]._private.rscratch.cp2ax, edges[i]._private.rscratch.cp2ay,
 						edges[i]._private.rscratch.endX, edges[i]._private.rscratch.endY, edges[i]._private.style["width"].value))
 							&&
-						(heur == 2 || (heur == 1 && this.checkBezierCrossesBox(x1, y1, x2, y2,
+						(heur == 2 || (heur == 1 && this.checkBezierInBox(x1, y1, x2, y2,
 							edges[i]._private.rscratch.startX, edges[i]._private.rscratch.startY,
 							edges[i]._private.rscratch.cp2ax, edges[i]._private.rscratch.cp2ay,
 							edges[i]._private.rscratch.endX, edges[i]._private.rscratch.endY, edges[i]._private.style["width"].value)))
@@ -1817,7 +1923,7 @@
 						edges[i]._private.rscratch.cp2cx, edges[i]._private.rscratch.cp2cy,
 						edges[i]._private.rscratch.endX, edges[i]._private.rscratch.endY, edges[i]._private.style["width"].value))
 							&&
-						(heur == 2 || (heur == 1 && this.checkBezierCrossesBox(x1, y1, x2, y2,
+						(heur == 2 || (heur == 1 && this.checkBezierInBox(x1, y1, x2, y2,
 							edges[i]._private.rscratch.startX, edges[i]._private.rscratch.startY,
 							edges[i]._private.rscratch.cp2cx, edges[i]._private.rscratch.cp2cy,
 							edges[i]._private.rscratch.endX, edges[i]._private.rscratch.endY, edges[i]._private.style["width"].value)))
@@ -1831,7 +1937,7 @@
 						edges[i]._private.rscratch.cp2x, edges[i]._private.rscratch.cp2y,
 						edges[i]._private.rscratch.endX, edges[i]._private.rscratch.endY, edges[i]._private.style["width"].value))
 							&&
-						(heur == 2 || (heur == 1 && this.checkBezierCrossesBox(x1, y1, x2, y2,
+						(heur == 2 || (heur == 1 && this.checkBezierInBox(x1, y1, x2, y2,
 							edges[i]._private.rscratch.startX, edges[i]._private.rscratch.startY,
 							edges[i]._private.rscratch.cp2x, edges[i]._private.rscratch.cp2y,
 							edges[i]._private.rscratch.endX, edges[i]._private.rscratch.endY, edges[i]._private.style["width"].value))))
@@ -1844,7 +1950,7 @@
 						edges[i]._private.rscratch.startY * 0.5 + edges[i]._private.rscratch.endY * 0.5, 
 						edges[i]._private.rscratch.endX, edges[i]._private.rscratch.endY, edges[i]._private.style["width"].value))
 							&& /* console.log("test", heur) == undefined && */
-						(heur == 2 || (heur == 1 && this.checkStraightEdgeCrossesBox(x1, y1, x2, y2,
+						(heur == 2 || (heur == 1 && this.checkStraightEdgeInBox(x1, y1, x2, y2,
 							edges[i]._private.rscratch.startX, edges[i]._private.rscratch.startY,
 							edges[i]._private.rscratch.endX, edges[i]._private.rscratch.endY, edges[i]._private.style["width"].value))))
 				{ box.push(edges[i]); }
@@ -1902,7 +2008,7 @@
 		//var children = node.children(":visible").not(":removed");
 
 		// consider only not removed children
-		var children = node.children().not(":removed");
+		var children = node.descendants().not(":removed");
 
 		// TODO instead of last calculated width & height define a default compound node size?
 		// last calculated bounds
@@ -2189,7 +2295,17 @@
 //			return "rectangle";
 //		}
 
-		return node._private.style["shape"].value;
+		var shape = node._private.style["shape"].value;
+
+		if( node.isParent() ){
+			if( shape === 'rectangle' || shape === 'roundrectangle' ){
+				return shape;
+			} else {
+				return 'rectangle';
+			}
+		}
+
+		return shape;
 	};
 
 	CanvasRenderer.prototype.getNodePadding = function(node)
@@ -2236,16 +2352,24 @@
 	CanvasRenderer.prototype.matchCanvasSize = function(container) {
 		var data = this.data; var width = container.clientWidth; var height = container.clientHeight;
 		
-		var canvas;
+		var canvas, canvasWidth = width, canvasHeight = height;
+
+		if ('devicePixelRatio' in window) {
+			canvasWidth *= devicePixelRatio;
+			canvasHeight *= devicePixelRatio;
+		}
+
 		for (var i = 0; i < CANVAS_LAYERS; i++) {
 
 			canvas = data.canvases[i];
 			
-			if (canvas.width !== width || canvas.height !== height) {
+			if (canvas.width !== canvasWidth || canvas.height !== canvasHeight) {
 				
-				canvas.width = width;
-				canvas.height = height;
-			
+				canvas.width = canvasWidth;
+				canvas.height = canvasHeight;
+
+				canvas.style.width = width + 'px';
+				canvas.style.height = height + 'px';
 			}
 		}
 		
@@ -2253,15 +2377,125 @@
 			
 			canvas = data.bufferCanvases[i];
 			
-			if (canvas.width !== width || canvas.height !== height) {
+			if (canvas.width !== canvasWidth || canvas.height !== canvasHeight) {
 				
-				canvas.width = width;
-				canvas.height = height;
-				
+				canvas.width = canvasWidth;
+				canvas.height = canvasHeight;
 			}
 		}
+
+		this.data.overlay.style.width = width + 'px';
+		this.data.overlay.style.height = height + 'px';
 	}
-	
+
+
+	// helper function for the sort operation
+	var elementDepth = function(ele) {
+		if (ele._private.group == "nodes")
+		{
+			return ele.parents().size();
+		}
+		else if (ele._private.group == "edges")
+		{
+			return Math.max(ele.source()[0].parents().size(),
+			                ele.target()[0].parents().size());
+		}
+		else
+		{
+			return 0;
+		}
+	};
+
+
+	CanvasRenderer.prototype.getCachedZSortedEles = function(){
+		var lastNodes = this.lastZOrderCachedNodes;
+		var lastEdges = this.lastZOrderCachedEdges;
+		var nodes = this.getCachedNodes();
+		var edges = this.getCachedEdges();
+		var eles = [];
+
+		if( !lastNodes || !lastEdges || lastNodes !== nodes || lastEdges !== edges ){ 
+			//console.time('cachezorder')
+			
+			for( var i = 0; i < nodes.length; i++ ){
+				eles.push( nodes[i] );
+			}
+
+			for( var i = 0; i < edges.length; i++ ){
+				eles.push( edges[i] );
+			}
+
+			eles.sort( zOrderSort );
+			this.cachedZSortedEles = eles;
+			//console.log('make cache')
+
+			//console.timeEnd('cachezorder')
+		} else {
+			eles = this.cachedZSortedEles;
+			//console.log('read cache')
+		}
+
+		this.lastZOrderCachedNodes = nodes;
+		this.lastZOrderCachedEdges = edges;
+
+		return eles;
+	};
+
+
+	var zOrderSort = function(a, b) {
+		var result = a._private.style["z-index"].value
+			- b._private.style["z-index"].value;
+
+		var depthA = 0;
+		var depthB = 0;
+
+		// no need to calculate element depth if there is no compound node
+		if ( a.cy().hasCompoundNodes() )
+		{
+			depthA = elementDepth(a);
+			depthB = elementDepth(b);
+		}
+
+		// if both elements has same depth,
+		// then edges should be drawn first
+		if (depthA - depthB === 0)
+		{
+			// "a" is a node, it should be drawn later
+			if (a._private.group === "nodes"
+				&& b._private.group === "edges")
+			{
+				return 1;
+			}
+			
+			// "a" is an edge, it should be drawn first
+			else if (a._private.group === "edges"
+				&& b._private.group === "nodes")
+			{
+				return -1;
+			}
+
+			// both nodes or both edges
+			else
+			{
+				if( result === 0 ){ // same z-index => compare indices in the core (order added to graph w/ last on top)
+					return a._private.index - b._private.index;
+				} else {
+					return result;
+				}
+			}
+		}
+
+		// elements on different level
+		else
+		{
+			// deeper element should be drawn later
+			return depthA - depthB;
+		}
+
+		// return zero if z-index values are not the same
+		return 0;
+	};
+
 	// Redraw frame
 	CanvasRenderer.prototype.redraw = function( forcedContext, drawAll ) {
 		var r = this;
@@ -2297,6 +2531,10 @@
 			this.lastDrawTime = nowTime;
 		}
 
+
+		// start on thread ready
+		setTimeout(function(){
+
 		var startTime = nowTime;
 
 		var looperMax = 100;
@@ -2304,9 +2542,23 @@
 
 		// console.time('init'); for( var looper = 0; looper <= looperMax; looper++ ){
 		
-		var cy = this.data.cy; var data = this.data; 
-		var nodes = this.getCachedNodes(); var edges = this.getCachedEdges();
-		this.matchCanvasSize(data.container);
+		var cy = r.data.cy; var data = r.data; 
+		var nodes = r.getCachedNodes(); var edges = r.getCachedEdges();
+		r.matchCanvasSize(data.container);
+
+		var zoom = cy.zoom();
+		var effectiveZoom = zoom;
+		var pan = cy.pan();
+		var effectivePan = {
+			x: pan.x,
+			y: pan.y
+		};
+
+		if( 'devicePixelRatio' in window ){
+			effectiveZoom *= devicePixelRatio;
+			effectivePan.x *= devicePixelRatio;
+			effectivePan.y *= devicePixelRatio;
+		}
 		
 		var elements = [];
 		for( var i = 0; i < nodes.length; i++ ){
@@ -2318,113 +2570,30 @@
 
 		// } console.timeEnd('init')
 
-		
-
-		// helper function for the sort operation
-		var elementDepth = function(ele) {
-			if (ele._private.group == "nodes")
-			{
-				return ele.parents().size();
-			}
-			else if (ele._private.group == "edges")
-			{
-				return Math.max(ele.source()[0].parents().size(),
-				                ele.target()[0].parents().size());
-			}
-			else
-			{
-				return 0;
-			}
-		};
+	
 
 		if (data.canvasNeedsRedraw[DRAG] || data.canvasNeedsRedraw[NODE] || drawAll) {
 			//NB : VERY EXPENSIVE
-			// console.time('edgectlpts'); for( var looper = 0; looper <= looperMax; looper++ ){
+			//console.time('edgectlpts'); for( var looper = 0; looper <= looperMax; looper++ ){
 
-			this.findEdgeControlPoints(edges);
-
-			// } console.timeEnd('edgectlpts')
-
-			
-			// console.time('compoundck'); for( var looper = 0; looper <= looperMax; looper++ ){
-			// check if there is a compound node
-			var compoundGraph = false;
-			for (var i = 0; i < elements.length; i++)
-			{
-				if( elements[i].isNode() && elements[i].isParent() )
-				{
-					compoundGraph = true;
-					break;
-				}
+			if( r.hideEdgesOnViewport && (r.pinching || r.hoverData.dragging || r.data.wheel || r.swipePanning) ){ 
+			} else {
+				r.findEdgeControlPoints(edges);
 			}
 
-			// } console.timeEnd('compoundck')
+			//} console.timeEnd('edgectlpts')
+
+		
 
 			// console.time('sort'); for( var looper = 0; looper <= looperMax; looper++ ){
-			var elements = [];
-			for( var i = 0; i < nodes.length; i++ ){
-				elements.push( nodes[i] );
-			}
-			for( var i = 0; i < edges.length; i++ ){
-				elements.push( edges[i] );
-			}
-
-			elements.sort(function(a, b) {
-				var result = a._private.style["z-index"].value
-					- b._private.style["z-index"].value;
-
-				var depthA = 0;
-				var depthB = 0;
-
-				// no need to calculate element depth if there is no compound node
-				if (compoundGraph)
-				{
-					depthA = elementDepth(a);
-					depthB = elementDepth(b);
-				}
-
-				if (result == 0)
-				{
-					// if both elements has same depth,
-					// then edges should be drawn first
-					if (depthA - depthB == 0)
-					{
-						// "a" is a node, it should be drawn later
-						if (a._private.group == "nodes"
-							&& b._private.group == "edges")
-						{
-							return 1;
-						}
-						// "a" is an edge, it should be drawn first
-						else if (a._private.group == "edges"
-							&& b._private.group == "nodes")
-						{
-							return -1;
-						}
-						// both nodes or both edges
-						else
-						{
-							return 0;
-						}
-					}
-					// elements on different level
-					else
-					{
-						// deeper element should be drawn later
-						return depthA - depthB;
-					}
-				}
-
-				// return zero if z-index values are not the same
-				return 0;
-			});
+			var elements = r.getCachedZSortedEles();
 			// } console.timeEnd('sort')
 
 			// console.time('updatecompounds'); for( var looper = 0; looper <= looperMax; looper++ ){
 			// no need to update graph if there is no compound node
-			if (compoundGraph)
+			if ( cy.hasCompoundNodes() )
 			{
-				this.updateAllCompounds(elements);
+				r.updateAllCompounds(elements);
 			}
 			// } console.timeEnd('updatecompounds')
 		}
@@ -2459,18 +2628,18 @@
 			context.clearRect(0, 0, context.canvas.width, context.canvas.height);
 			
 			if( !drawAll ){
-				context.translate(cy.pan().x, cy.pan().y);
-				context.scale(cy.zoom(), cy.zoom());
+				context.translate(effectivePan.x, effectivePan.y);
+				context.scale(effectiveZoom, effectiveZoom);
 			} 
 			
 			for (var index = 0; index < elesNotInDragLayer.length; index++) {
 				element = elesNotInDragLayer[index];
 				
 				if (element._private.group == "nodes") {
-					this.drawNode(context, element);
+					r.drawNode(context, element);
 					
 				} else if (element._private.group == "edges") {
-					this.drawEdge(context, element);
+					r.drawEdge(context, element);
 				}
 			}
 			
@@ -2478,16 +2647,16 @@
 				element = elesNotInDragLayer[index];
 				
 				if (element._private.group == "nodes") {
-					this.drawNodeText(context, element);
+					r.drawNodeText(context, element);
 				} else if (element._private.group == "edges") {
-					this.drawEdgeText(context, element);
+					r.drawEdgeText(context, element);
 				}
 
 				// draw the overlay
 				if (element._private.group == "nodes") {
-					this.drawNode(context, element, true);
+					r.drawNode(context, element, true);
 				} else if (element._private.group == "edges") {
-					this.drawEdge(context, element, true);
+					r.drawEdge(context, element, true);
 				}
 			}
 			
@@ -2520,8 +2689,8 @@
 				context.setTransform(1, 0, 0, 1, 0, 0);
 				context.clearRect(0, 0, context.canvas.width, context.canvas.height);
 				
-				context.translate(cy.pan().x, cy.pan().y);
-				context.scale(cy.zoom(), cy.zoom());
+				context.translate(effectivePan.x, effectivePan.y);
+				context.scale(effectiveZoom, effectiveZoom);
 			}
 			
 			var element;
@@ -2530,9 +2699,9 @@
 				element = elesInDragLayer[index];
 				
 				if (element._private.group == "nodes") {
-					this.drawNode(context, element);
+					r.drawNode(context, element);
 				} else if (element._private.group == "edges") {
-					this.drawEdge(context, element);
+					r.drawEdge(context, element);
 				}
 			}
 			
@@ -2540,16 +2709,16 @@
 				element = elesInDragLayer[index];
 				
 				if (element._private.group == "nodes") {
-					this.drawNodeText(context, element);
+					r.drawNodeText(context, element);
 				} else if (element._private.group == "edges") {
-					this.drawEdgeText(context, element);
+					r.drawEdgeText(context, element);
 				}
 
 				// draw the overlay
 				if (element._private.group == "nodes") {
-					this.drawNode(context, element, true);
+					r.drawNode(context, element, true);
 				} else if (element._private.group == "edges") {
-					this.drawEdge(context, element, true);
+					r.drawEdge(context, element, true);
 				}
 			}
 			
@@ -2567,8 +2736,8 @@
 				context.setTransform(1, 0, 0, 1, 0, 0);
 				context.clearRect(0, 0, context.canvas.width, context.canvas.height);
 			
-				context.translate(cy.pan().x, cy.pan().y);
-				context.scale(cy.zoom(), cy.zoom());		
+				context.translate(effectivePan.x, effectivePan.y);
+				context.scale(effectiveZoom, effectiveZoom);		
 			}	
 			
 			var coreStyle = cy.style()._private.coreStyle;
@@ -2625,39 +2794,46 @@
 			}
 		}
 
-		// } console.timeEnd('drawing')
+		if( r.options.showOverlay ){
+			var context = data.canvases[OVERLAY].getContext("2d");
 
-		{
-			var context;
+			context.lineJoin = 'round';
+			context.font = '14px helvetica';
+			context.strokeStyle = '#fff';
+			context.lineWidth = '4';
+			context.fillStyle = '#666';
+			context.textAlign = 'right';
+
+			var text = 'cytoscape.js';
 			
-			// console.time('raster'); for( var looper = 0; looper <= looperMax; looper++ ){
-			// Rasterize the layers, but only if container has nonzero size
-			// if (this.data.container.clientHeight > 0
-			// 		&& this.data.container.clientWidth > 0) {
-				
-			// 	context = data.bufferCanvases[1].getContext("2d");
-			// 	context.globalCompositeOperation = "copy";
-			// 	context.drawImage(data.canvases[4], 0, 0);
-			// 	context.globalCompositeOperation = "source-over";
-			// 	context.drawImage(data.canvases[2], 0, 0);
-			// 	context.drawImage(data.canvases[0], 0, 0);
-				
-			// 	context = data.bufferCanvases[0].getContext("2d");
-			// 	context.globalCompositeOperation = "copy";
-			// 	context.drawImage(data.bufferCanvases[1], 0, 0);
-			// }
-			// } console.timeEnd('raster')
+			var w = context.canvas.width;
+			var h = context.canvas.height;
+			var p = 4;
+			var tw = context.measureText(text).width;
+			var th = 14; 
+
+			context.clearRect(0, 0, w, h);
+			context.strokeText(text, w - p, h - p);
+			context.fillText(text, w - p, h - p);
+
+			data.overlayDrawn = true;
 		}
+
+		// } console.timeEnd('drawing')
 
 		var endTime = +new Date;
 
-		if( this.averageRedrawTime === undefined ){
-			this.averageRedrawTime = endTime - startTime;
+		if( r.averageRedrawTime === undefined ){
+			r.averageRedrawTime = endTime - startTime;
 		}
 
 		// use a weighted average with a bias from the previous average so we don't spike so easily
-		this.averageRedrawTime = this.averageRedrawTime/2 + (endTime - startTime)/2;
+		r.averageRedrawTime = r.averageRedrawTime/2 + (endTime - startTime)/2;
 		//console.log('actual: %i, average: %i', endTime - startTime, this.averageRedrawTime);
+
+
+		// end on thread ready
+		}, 0);
 	};
 	
 	var imageCache = {};
@@ -2753,7 +2929,7 @@
 	// Draw edge
 	CanvasRenderer.prototype.drawEdge = function(context, edge, drawOverlayInstead) {
 
-		//if( this.pinching ){ return; } // save cycles on pinching
+		if( this.hideEdgesOnViewport && (this.dragData.didDrag || this.pinching || this.hoverData.dragging || this.data.wheel || this.swipePanning) ){ return; } // save cycles on pinching
 
 		var startNode, endNode;
 
@@ -2940,7 +3116,8 @@
 		// 3 points given -> assume Bezier
 		// 2 -> assume straight
 		
-		var zoom = this.data.cy.zoom();
+		var cy = this.data.cy;
+		var zoom = cy.zoom();
 		
 		// Adjusted edge width for dotted
 //		width = Math.max(width * 1.6, 3.4) * zoom;
@@ -3046,7 +3223,7 @@
 			
 			// Now use buffer
 			context.beginPath();
-			context.save();
+			//context.save();
 			
 			for (var i=0; i<pt.length/2; i++) {
 				
@@ -3062,7 +3239,7 @@
 						bufH / zoom);
 			}
 			
-			context.restore();
+			//context.restore();
 			
 		} else if (type == "dashed") {
 			var pt;
@@ -3106,7 +3283,7 @@
 	//		context2.fill();
 			context2.stroke();
 			
-			context.save();
+			//context.save();
 			
 			// document.body.appendChild(buffer[0]);
 			
@@ -3117,8 +3294,7 @@
 			if (pts.length == 2 * 2) {
 				rotateVector = [pts[2] - pts[0], pts[3] - pt[1]];
 				
-				angle = Math.acos((rotateVector[0] * 0 + rotateVector[1] * -1)
-						/ Math.sqrt(rotateVector[0] * rotateVector[0] 
+				angle = Math.acos((rotateVector[0] * 0 + rotateVector[1] * -1) / Math.sqrt(rotateVector[0] * rotateVector[0] 
 						+ rotateVector[1] * rotateVector[1]));
 	
 				if (rotateVector[0] < 0) {
@@ -3140,8 +3316,7 @@
 					                    2 * (1-p) * (pts[3] - pts[1]) 
 					                    + 2 * p * (pts[5] - pts[3])];
 	
-					angle = Math.acos((rotateVector[0] * 0 + rotateVector[1] * -1)
-							/ Math.sqrt(rotateVector[0] * rotateVector[0] 
+					angle = Math.acos((rotateVector[0] * 0 + rotateVector[1] * -1) / Math.sqrt(rotateVector[0] * rotateVector[0] 
 								+ rotateVector[1] * rotateVector[1]));
 	
 					if (rotateVector[0] < 0) {
@@ -3167,7 +3342,9 @@
 				context.translate(-pt[i*2], -pt[i*2+1]);
 				
 			}
-			context.restore();
+			
+			
+			//context.restore();
 		} else {
 			this.drawStyledEdge(edge, context, pts, "solid", width);
 		}
@@ -3177,7 +3354,16 @@
 	// Draw edge text
 	CanvasRenderer.prototype.drawEdgeText = function(context, edge) {
 	
+		if( this.hideEdgesOnViewport && (this.dragData.didDrag || this.pinching || this.hoverData.dragging || this.data.wheel || this.swipePanning) ){ return; } // save cycles on pinching
+	
 		if (edge._private.style["visibility"].value != "visible") {
+			return;
+		}
+
+		var computedSize = edge._private.style["font-size"].pxValue * edge.cy().zoom();
+		var minSize = edge._private.style["min-zoomed-font-size"].pxValue;
+
+		if( computedSize < minSize ){
 			return;
 		}
 	
@@ -3222,8 +3408,21 @@
 
 		var nodeWidth, nodeHeight;
 		
-		if (node._private.style["visibility"].value != "visible") {
+		if ( node._private.style["visibility"].value != "visible" ) {
 			return;
+		}
+
+		var parentOpacity = 1;
+		var parents = node.parents();
+		for( var i = 0; i < parents.length; i++ ){
+			var parent = parents[i];
+			var opacity = parent._private.style.opacity.value;
+
+			parentOpacity = opacity * parentOpacity;
+
+			if( opacity === 0 ){
+				return;
+			}
 		}
 		
 		nodeWidth = this.getNodeWidth(node);
@@ -3237,14 +3436,14 @@
 				+ node._private.style["background-color"].value[1] + ","
 				+ node._private.style["background-color"].value[2] + ","
 				+ (node._private.style["background-opacity"].value 
-				* node._private.style["opacity"].value) + ")";
+				* node._private.style["opacity"].value * parentOpacity) + ")";
 			
 			// Node border color & opacity
 			context.strokeStyle = "rgba(" 
 				+ node._private.style["border-color"].value[0] + ","
 				+ node._private.style["border-color"].value[1] + ","
 				+ node._private.style["border-color"].value[2] + ","
-				+ (node._private.style["border-opacity"].value * node._private.style["opacity"].value) + ")";
+				+ (node._private.style["border-opacity"].value * node._private.style["opacity"].value * parentOpacity) + ")";
 			
 			
 			{
@@ -3335,7 +3534,7 @@
 	};
 	
 	CanvasRenderer.prototype.drawInscribedImage = function(context, img, node) {
-		
+		var r = this;
 //		console.log(this.data);
 		var zoom = this.data.cy._private.zoom;
 		
@@ -3374,6 +3573,13 @@
 	CanvasRenderer.prototype.drawNodeText = function(context, node) {
 		
 		if (node._private.style["visibility"].value != "visible") {
+			return;
+		}
+
+		var computedSize = node._private.style["font-size"].pxValue * node.cy().zoom();
+		var minSize = node._private.style["min-zoomed-font-size"].pxValue;
+
+		if( computedSize < minSize ){
 			return;
 		}
 	
@@ -3425,6 +3631,19 @@
 	// Draw text
 	CanvasRenderer.prototype.drawText = function(context, element, textX, textY) {
 	
+		var parentOpacity = 1;
+		var parents = element.parents();
+		for( var i = 0; i < parents.length; i++ ){
+			var parent = parents[i];
+			var opacity = parent._private.style.opacity.value;
+
+			parentOpacity = opacity * parentOpacity;
+
+			if( opacity === 0 ){
+				return;
+			}
+		}
+
 		// Font style
 		var labelStyle = element._private.style["font-style"].strValue;
 		var labelSize = element._private.style["font-size"].value + "px";
@@ -3455,14 +3674,14 @@
 			+ element._private.style["color"].value[1] + ","
 			+ element._private.style["color"].value[2] + ","
 			+ (element._private.style["text-opacity"].value
-			* element._private.style["opacity"].value) + ")";
+			* element._private.style["opacity"].value * parentOpacity) + ")";
 		
 		context.strokeStyle = "rgba(" 
 			+ element._private.style["text-outline-color"].value[0] + ","
 			+ element._private.style["text-outline-color"].value[1] + ","
 			+ element._private.style["text-outline-color"].value[2] + ","
 			+ (element._private.style["text-opacity"].value
-			* element._private.style["opacity"].value) + ")";
+			* element._private.style["opacity"].value * parentOpacity) + ")";
 		
 		if (text != undefined) {
 			var lineWidth = 2  * element._private.style["text-outline-width"].value; // *2 b/c the stroke is drawn centred on the middle
@@ -3538,39 +3757,52 @@
 			
 			for (var i = 0; i < hashTable[pairId].length; i++) {
 				edge = hashTable[pairId][i];
+				
+				var edgeIndex1 = edge._private.rscratch.lastEdgeIndex;
+				var edgeIndex2 = i;
 
-				// var srcX1 = edge._private.rscratch.lastSrcCtlPtX;
-				// var srcX2 = src._private.position.x;
-				// var srcY1 = edge._private.rscratch.lastSrcCtlPtY;
-				// var srcY2 = src._private.position.y;
-				// var srcW1 = edge._private.rscratch.lastSrcCtlPtW;
-				// var srcW2 = src.outerWidth();
-				// var srcH1 = edge._private.rscratch.lastSrcCtlPtH;
-				// var srcH2 = src.outerHeight();
+				var numEdges1 = edge._private.rscratch.lastNumEdges;
+				var numEdges2 = hashTable[pairId].length;
 
-				// var tgtX1 = edge._private.rscratch.lastTgtCtlPtX;
-				// var tgtX2 = tgt._private.position.x;
-				// var tgtY1 = edge._private.rscratch.lastTgtCtlPtY;
-				// var tgtY2 = tgt._private.position.y;
-				// var tgtW1 = edge._private.rscratch.lastTgtCtlPtW;
-				// var tgtW2 = tgt.outerWidth();
-				// var tgtH1 = edge._private.rscratch.lastTgtCtlPtH;
-				// var tgtH2 = tgt.outerHeight();
+				var srcX1 = edge._private.rscratch.lastSrcCtlPtX;
+				var srcX2 = src._private.position.x;
+				var srcY1 = edge._private.rscratch.lastSrcCtlPtY;
+				var srcY2 = src._private.position.y;
+				var srcW1 = edge._private.rscratch.lastSrcCtlPtW;
+				var srcW2 = src.outerWidth();
+				var srcH1 = edge._private.rscratch.lastSrcCtlPtH;
+				var srcH2 = src.outerHeight();
 
-				// if( srcX1 === srcX2 && srcY1 === srcY2 && srcW1 === srcW2 && srcH1 === srcH2
-				// &&  tgtX1 === tgtX2 && tgtY1 === tgtY2 && tgtW1 === tgtW2 && tgtH1 === tgtH2 ){
-				// 	continue; // then the control points haven't changed and we can skip calculating them
-				// } else {
-				// 	src._private.rscratch.lastSrcCtlPtX = srcX2;
-				// 	src._private.rscratch.lastSrcCtlPtY = srcY2;
-				// 	src._private.rscratch.lastSrcCtlPtW = srcW2;
-				// 	src._private.rscratch.lastSrcCtlPtH = srcH2;
-				// 	tgt._private.rscratch.lastTgtCtlPtX = tgtX2;
-				// 	tgt._private.rscratch.lastTgtCtlPtY = tgtY2;
-				// 	tgt._private.rscratch.lastTgtCtlPtW = tgtW2;
-				// 	tgt._private.rscratch.lastTgtCtlPtH = tgtH2;
-				// }
-							
+				var tgtX1 = edge._private.rscratch.lastTgtCtlPtX;
+				var tgtX2 = tgt._private.position.x;
+				var tgtY1 = edge._private.rscratch.lastTgtCtlPtY;
+				var tgtY2 = tgt._private.position.y;
+				var tgtW1 = edge._private.rscratch.lastTgtCtlPtW;
+				var tgtW2 = tgt.outerWidth();
+				var tgtH1 = edge._private.rscratch.lastTgtCtlPtH;
+				var tgtH2 = tgt.outerHeight();
+
+				if( srcX1 === srcX2 && srcY1 === srcY2 && srcW1 === srcW2 && srcH1 === srcH2
+				&&  tgtX1 === tgtX2 && tgtY1 === tgtY2 && tgtW1 === tgtW2 && tgtH1 === tgtH2
+				&&  edgeIndex1 === edgeIndex2 && numEdges1 === numEdges2 ){
+					// console.log('edge ctrl pt cache HIT')
+					continue; // then the control points haven't changed and we can skip calculating them
+				} else {
+					var rs = edge._private.rscratch;
+
+					rs.lastSrcCtlPtX = srcX2;
+					rs.lastSrcCtlPtY = srcY2;
+					rs.lastSrcCtlPtW = srcW2;
+					rs.lastSrcCtlPtH = srcH2;
+					rs.lastTgtCtlPtX = tgtX2;
+					rs.lastTgtCtlPtY = tgtY2;
+					rs.lastTgtCtlPtW = tgtW2;
+					rs.lastTgtCtlPtH = tgtH2;
+					rs.lastEdgeIndex = edgeIndex2;
+					rs.lastNumEdges = numEdges2;
+					// console.log('edge ctrl pt cache MISS')
+				}
+
 				// Self-edge
 				if (src._private.data.id == tgt._private.data.id) {
 					var stepSize = edge._private.style["control-point-step-size"].pxValue;
@@ -3981,25 +4213,25 @@
 		}
 		
 		// 4 ortho extreme points
-		var east = [centerX - width / 2 - padding, centerY];
-		var west = [centerX + width / 2 + padding, centerY];
-		var north = [centerX, centerY + height / 2 + padding];
-		var south = [centerX, centerY - height / 2 - padding];
+		var west = [centerX - width / 2 - padding, centerY];
+		var east = [centerX + width / 2 + padding, centerY];
+		var north = [centerX, centerY - height / 2 - padding];
+		var south = [centerX, centerY + height / 2 + padding];
 		
 		// out of bounds: return false
-		if (x2 < east[0]) {
+		if (x2 < west[0]) {
 			return false;
 		}
 		
-		if (x1 > west[0]) {
+		if (x1 > east[0]) {
 			return false;
 		}
 		
-		if (y2 < south[1]) {
+		if (y1 > south[1]) {
 			return false;
 		}
 		
-		if (y1 > north[1]) {
+		if (y2 < north[1]) {
 			return false;
 		}
 		
@@ -4025,11 +4257,11 @@
 		}
 		
 		// box corner in ellipse: return true		
-		x1 = (x1 - centerX) / (width + padding);
-		x2 = (x2 - centerX) / (width + padding);
+		x1 = (x1 - centerX) / (width / 2 + padding);
+		x2 = (x2 - centerX) / (width / 2 + padding);
 		
-		y1 = (y1 - centerY) / (height + padding);
-		y2 = (y2 - centerY) / (height + padding);
+		y1 = (y1 - centerY) / (height / 2 + padding);
+		y2 = (y2 - centerY) / (height / 2 + padding);
 		
 		if (x1 * x1 + y1 * y1 <= 1) {
 			return true;
@@ -4084,17 +4316,58 @@
 		
 		for (var i = 0; i < transformedPoints.length / 2; i++) {
 			transformedPoints[i * 2] = 
-				width * (basePoints[i * 2] * cos
+				width / 2 * (basePoints[i * 2] * cos
 					- basePoints[i * 2 + 1] * sin);
 			
 			transformedPoints[i * 2 + 1] = 
-				height * (basePoints[i * 2 + 1] * cos 
+				height / 2 * (basePoints[i * 2 + 1] * cos 
 					+ basePoints[i * 2] * sin);
 			
 			transformedPoints[i * 2] += centerX;
 			transformedPoints[i * 2 + 1] += centerY;
 		}
 		
+		// Assume transformedPoints.length > 0, and check if intersection is possible
+		var minTransformedX = transformedPoints[0];
+		var maxTransformedX = transformedPoints[0];
+		var minTransformedY = transformedPoints[1];
+		var maxTransformedY = transformedPoints[1];
+		
+		for (var i = 1; i < transformedPoints.length / 2; i++) {
+			if (transformedPoints[i * 2] > maxTransformedX) {
+				maxTransformedX = transformedPoints[i * 2];
+			}
+			
+			if (transformedPoints[i * 2] < minTransformedX) {
+				minTransformedX = transformedPoints[i * 2];
+			}
+			
+			if (transformedPoints[i * 2 + 1] > maxTransformedY) {
+				maxTransformedY = transformedPoints[i * 2 + 1];
+			}
+			
+			if (transformedPoints[i * 2 + 1] < minTransformedY) {
+				minTransformedY = transformedPoints[i * 2 + 1];
+			}
+		}
+		
+		if (x2 < minTransformedX - padding) {
+			return false;
+		}
+		
+		if (x1 > maxTransformedX + padding) {
+			return false;
+		}
+		
+		if (y2 < minTransformedY - padding) {
+			return false;
+		}
+		
+		if (y1 > maxTransformedY + padding) {
+			return false;
+		}
+		
+		// Continue checking with padding-corrected points
 		var points;
 		
 		if (padding > 0) {
@@ -4120,6 +4393,45 @@
 			}
 		}
 		
+		
+		// Check for intersections with the selection box
+		for (var i = 0; i < points.length / 2; i++) {
+			
+			var currentX = points[i * 2];
+			var currentY = points[i * 2 + 1];
+			var nextX;
+			var nextY;
+			
+			if (i < points.length / 2 - 1) {
+				nextX = points[(i + 1) * 2];
+				nextY = points[(i + 1) * 2 + 1]
+			} else {
+				nextX = points[0];
+				nextY = points[1];
+			}
+			
+			// Intersection with top of selection box
+			if (renderer.finiteLinesIntersect(currentX, currentY, nextX, nextY, x1, y1, x2, y1, false).length > 0) {
+				return true;
+			}
+			
+			// Intersection with bottom of selection box
+			if (renderer.finiteLinesIntersect(currentX, currentY, nextX, nextY, x1, y2, x2, y2, false).length > 0) {
+				return true;
+			}
+			
+			// Intersection with left side of selection box
+			if (renderer.finiteLinesIntersect(currentX, currentY, nextX, nextY, x1, y1, x1, y2, false).length > 0) {
+				return true;
+			}
+			
+			// Intersection with right side of selection box
+			if (renderer.finiteLinesIntersect(currentX, currentY, nextX, nextY, x2, y1, x2, y2, false).length > 0) {
+				return true;
+			}
+		}
+
+		/*
 		// Check if box corner in the polygon
 		if (renderer.pointInsidePolygon(
 			x1, y1, points, 0, 0, 1, 1, 0, direction)) {
@@ -4131,14 +4443,14 @@
 			return true;
 		} else if (renderer.pointInsidePolygon(
 			x2, y2, points, 0, 0, 1, 1, 0, direction)) {
-			
-			return true;
+			 
+			return true; 
 		} else if (renderer.pointInsidePolygon(
 			x2, y1, points, 0, 0, 1, 1, 0, direction)) {
 			
 			return true;
 		}
-		
+		*/
 		return false;
 	}
 	
@@ -4176,7 +4488,7 @@
 			currentY = points[i * 2 + 1];
 
 			if (i < points.length / 2 - 1) {
-				nextX = points[(i + 1) * 2];
+				nextX = points[(i + 1) * 2]; 
 				nextY = points[(i + 1) * 2 + 1];
 			} else {
 				nextX = points[0]; 
@@ -4526,8 +4838,7 @@
 			angle = - (Math.PI / 2 + angle);
 		}
 		
-		context.save();
-		
+		//context.save();
 		context.translate(x, y);
 		
 		context.moveTo(0, 0);
@@ -4545,8 +4856,13 @@
 		
 //		context.stroke();
 		context.fill();
-		context.restore();
+
+		context.scale(1/size, 1/size);
+		context.rotate(angle);
+		context.translate(-x, -y);
+		//context.restore();
 	}
+
 	}
 	
 	// @O Node shapes
@@ -4633,14 +4949,19 @@
 		},
 		
 		drawPath: function(context, centerX, centerY, width, height) {
+			
+			//context.save();
+			
 			context.beginPath();
-			context.save();
 			context.translate(centerX, centerY);
 			context.scale(width / 2, height / 2);
 			// At origin, radius 1, 0 to 2pi
-			context.arc(0, 0, 1, 0, Math.PI * 2, false);
+			context.arc(0, 0, 1, 0, Math.PI * 2 * 0.999, false); // *0.999 b/c chrome rendering bug on full circle
 			context.closePath();
-			context.restore();
+
+			context.scale(2/width, 2/height);
+			context.translate(-centerX, -centerY);
+			//context.restore();
 			
 //			console.log("drawing ellipse");
 //			console.log(arguments);
@@ -5341,19 +5662,25 @@
 	CanvasRenderer.prototype.drawPolygonPath = function(
 		context, x, y, width, height, points) {
 
-		context.save();
+		//context.save();
+		
+
 		context.translate(x, y);
-		context.beginPath();
-		
 		context.scale(width / 2, height / 2);
+
+		context.beginPath();
+
 		context.moveTo(points[0], points[1]);
-		
+
 		for (var i = 1; i < points.length / 2; i++) {
 			context.lineTo(points[i * 2], points[i * 2 + 1]);
 		}
 		
 		context.closePath();
-		context.restore();
+		
+		context.scale(2/width, 2/height);
+		context.translate(-x, -y);
+		// context.restore();
 	}
 	
 	CanvasRenderer.prototype.drawPolygon = function(
@@ -5430,23 +5757,29 @@
 		// 1 - curve may be in box; needs precise check
 		// 2 - curve is in box
 		
+		// midpoint
+		var midX = 0.25 * x1 + 0.5 * x2 + 0.25 * x3;
+		var midY = 0.25 * y1 + 0.5 * y2 + 0.25 * y3;
+
 		var boxMinX = Math.min(x1box, x2box) - tolerance;
 		var boxMinY = Math.min(y1box, y2box) - tolerance;
 		var boxMaxX = Math.max(x1box, x2box) + tolerance;
 		var boxMaxY = Math.max(y1box, y2box) + tolerance;
 		
-		if (x1 >= boxMinX && x1 <= boxMaxX && y1 >= boxMinY && y1 <= boxMaxY) {
-			return 2;
-		} else if (x3 >= boxMinX && x3 <= boxMaxX && y3 >= boxMinY && y3 <= boxMaxY) {
-			return 2;
-		} else if (x2 >= boxMinX && x2 <= boxMaxX && y2 >= boxMinY && y2 <= boxMaxY) { 
+		if (x1 >= boxMinX && x1 <= boxMaxX && y1 >= boxMinY && y1 <= boxMaxY) { // (x1, y1) in box
+			return 1;
+		} else if (x3 >= boxMinX && x3 <= boxMaxX && y3 >= boxMinY && y3 <= boxMaxY) { // (x3, y3) in box
+			return 1;
+		} else if (midX >= boxMinX && midX <= boxMaxX && midY >= boxMinY && midY <= boxMaxY) { // (midX, midY) in box
+			return 1;
+		} else if (x2 >= boxMinX && x2 <= boxMaxX && y2 >= boxMinY && y2 <= boxMaxY) { // ctrl pt in box
 			return 1;
 		}
 		
-		var curveMinX = Math.min(x1, x2, x3);
-		var curveMinY = Math.min(y1, y2, y3);
-		var curveMaxX = Math.max(x1, x2, x3);
-		var curveMaxY = Math.max(y1, y2, y3);
+		var curveMinX = Math.min(x1, midX, x3);
+		var curveMinY = Math.min(y1, midY, y3);
+		var curveMaxX = Math.max(x1, midX, x3);
+		var curveMaxY = Math.max(y1, midY, y3);
 		
 		/*
 		console.log(curveMinX + ", " + curveMinY + ", " + curveMaxX 
@@ -5466,7 +5799,43 @@
 		
 		return 1;
 	}
+
+	CanvasRenderer.prototype.checkBezierInBox = function(
+		x1box, y1box, x2box, y2box, x1, y1, x2, y2, x3, y3, tolerance) {
+
+
+		function qbezierAt(p0, p1, p2, t){
+			return (1 - t)*(1 - t)*p0 + 2*(1 - t)*t*p1 + t*t*p2;
+		}
+
+		function sampleInBox(t){
+			var x = qbezierAt(x1, x2, x3, t);
+			var y = qbezierAt(y1, y2, y3, t);
+
+			return x1box <= x && x <= x2box
+				&& y1box <= y && y <= y2box
+			;
+		}
+
+		for( var t = 0; t <= 1; t += 0.25 ){
+			if( !sampleInBox(t) ){
+				return false;
+			}
+		}
+
+		return true;
+	};
 	
+	CanvasRenderer.prototype.checkStraightEdgeInBox = function(
+		x1box, y1box, x2box, y2box, x1, y1, x2, y2, tolerance) {
+
+		return x1box <= x1 && x1 <= x2box
+			&& x1box <= x2 && x2 <= x2box
+			&& y1box <= y1 && y1 <= y2box
+			&& y1box <= y2 && y2 <= y2box
+		;
+	};
+
 	CanvasRenderer.prototype.checkStraightEdgeCrossesBox = function(
 		x1box, y1box, x2box, y2box, x1, y1, x2, y2, tolerance) {
 		
@@ -5636,6 +6005,18 @@
 		return false;
 	}
 	
+	CanvasRenderer.prototype.inLineVicinity = function(x, y, lx1, ly1, lx2, ly2, tolerance){
+		var t = tolerance;
+
+		var x1 = Math.min(lx1, lx2);
+		var x2 = Math.max(lx1, lx2);
+		var y1 = Math.min(ly1, ly2);
+		var y2 = Math.max(ly1, ly2);
+
+		return x1 - t <= x && x <= x2 + t
+			&& y1 - t <= y && y <= y2 + t;
+	};
+
 	CanvasRenderer.prototype.inBezierVicinity = function(
 		x, y, x1, y1, x2, y2, x3, y3, toleranceSquared) {
 		
@@ -5643,6 +6024,22 @@
 		// is closest to (x2, y2)
 		var middlePointX = 0.25 * x1 + 0.5 * x2 + 0.25 * x3;
 		var middlePointY = 0.25 * y1 + 0.5 * y2 + 0.25 * y3;
+
+		// a rough bounding box of the bezier curve
+		var bb = {
+			x1: Math.min( x1, x3, middlePointX ),
+			x2: Math.max( x1, x3, middlePointX ),
+			y1: Math.min( y1, y3, middlePointY ),
+			y2: Math.max( y1, y3, middlePointY )
+		};
+
+		// if outside the rough bounding box for the bezier, then it can't be a hit
+		if( x < bb.x1 || x > bb.x2 || y < bb.y1 || y > bb.y2 ){
+			// console.log('bezier out of rough bb')
+			return false;
+		} else {
+			// console.log('do more expensive check');
+		}
 		
 		var displacementX, displacementY, offsetX, offsetY;
 		var dotProduct, dotSquared, hypSquared;

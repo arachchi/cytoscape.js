@@ -18,7 +18,7 @@ PREAMBLIFY = $(SED) "s/\#(VERSION)/${VERSION}/g" $(PREAMBLE) | $(CAT) - $@ > $(T
 MAKE = make
 
 # version (update this when building release zip)
-VERSION := 2.0.0beta3-github-snapshot-$(shell date +%Y.%m.%d-%H.%M.%S)
+VERSION := 2.0.1-github-snapshot-$(shell date +%Y.%m.%d-%H.%M.%S)
 
 # directories
 LIB_DIR = lib
@@ -81,6 +81,8 @@ EXTENSIONS = $(EXTENSIONS_DIR)/cytoscape.renderer.null.js\
 	$(EXTENSIONS_DIR)/cytoscape.layout.grid.js\
 	$(EXTENSIONS_DIR)/cytoscape.layout.preset.js\
 	$(EXTENSIONS_DIR)/cytoscape.layout.arbor.js\
+	$(EXTENSIONS_DIR)/cytoscape.layout.circle.js\
+	$(EXTENSIONS_DIR)/cytoscape.layout.breadthfirst.js\
 
 # plugins (list them manually if you don't want them all)
 PLUGINS = $(wildcard $(PLUGINS_DIR)/*)
@@ -95,7 +97,7 @@ MIN_BUILD_EXTENSIONS =  $(BUILD_EXTENSIONS:%.js=%.min.js)
 
 # configure what files to include in the zip
 ZIP_FILE = $(BUILD_DIR)/cytoscape.js-$(VERSION).zip
-ZIP_CONTENTS = $(JS_FILE) $(MIN_JS_FILE) $(LIBS) $(LICENSE)
+ZIP_CONTENTS = $(JS_FILE) $(MIN_JS_FILE) $(LIBS) $(LICENSE) $(BUILD_PLUGINS) $(MIN_BUILD_PLUGINS)
 ZIP_DIR = cytoscape.js-$(VERSION)
 LICENSE = LGPL-LICENSE.txt
 PREAMBLE = etc/PREAMBLE

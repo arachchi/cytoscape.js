@@ -1,5 +1,5 @@
 {
-  "version": "2.0.0-beta3",
+  "version": "2.0.1",
   "jqueryVersion": "1.4",
 
   "templates": {
@@ -158,7 +158,7 @@
                   "args": [ { "name": "eles", "descr": "The collection to fit to.", "optional": true }, { "name": "padding", "descr": "An amount of padding (in pixels) to have around the graph", "optional": true } ] 
                 }
               ],
-              "md": "core/center"
+              "md": "core/fit"
             },
 
             {
@@ -735,6 +735,11 @@
             {
               "name": "nodes.unlock",
               "descr": "Unlock the nodes such that their positions can be changed."
+            },
+
+            {
+              "name": "ele.active",
+              "descr": "Gets whether the element is active."
             }
 
           ]
@@ -1324,6 +1329,23 @@
                 }
               ],
               "md": "collection/codirectedEdges"
+            },
+
+            {
+              "name": "eles.breadthFirstSearch",
+              "descr": "Perform a breadth-first search, with this collection as the root nodes of the search.",
+              "formats": [
+                {
+                  "args": [
+                    { "name": "function(i, depth)", "descr": "A handler function that is called when a node is visited in the search.", "optional": true, "fields": [
+                      { "name": "i", "descr": "The index indicating this node is the ith visited node." },
+                      { "name": "depth", "descr": "How many edge hops away this node is from the root nodes." }
+                    ] },
+                    { "name": "directed", "descr": "A boolean indicating whether the search should only go along edges from source to target (default true).", "optional": true }
+                  ]
+                }
+              ],
+              "md": "collection/breadthFirstSearch"
             }
           ]
         },

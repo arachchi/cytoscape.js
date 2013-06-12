@@ -112,8 +112,12 @@
 		return style;
 	};
 
-	$$.Stylesheet.prototype.assignToStyle = function( style ){
+	$$.Stylesheet.prototype.assignToStyle = function( style, addDefaultStylesheet ){
 		style.clear();
+
+		if( addDefaultStylesheet || addDefaultStylesheet === undefined ){
+			style.addDefaultStylesheet();
+		}
 
 		for( var i = 0; i < this.length; i++ ){
 			var context = this[i];
@@ -163,8 +167,8 @@
 			bgRepeat: { enums: ["repeat", "repeat-x", "repeat-y", "no-repeat"] },
 			cursor: { enums: ["auto", "crosshair", "default", "e-resize", "n-resize", "ne-resize", "nw-resize", "pointer", "progress", "s-resize", "sw-resize", "text", "w-resize", "wait", "grab", "grabbing"] },
 			text: { string: true },
-			data: { mapping: true, regex: "^data\\s*\\(\\s*(\\w+)\\s*\\)$" },
-			mapData: { mapping: true, regex: "^mapData\\((\\w+)\\s*\\,\\s*(" + number + ")\\s*\\,\\s*(" + number + ")\\s*,\\s*(" + number + "|\\w+|" + rgba + "|" + hsla + "|" + hex3 + "|" + hex6 + ")\\s*\\,\\s*(" + number + "|\\w+|" + rgba + "|" + hsla + "|" + hex3 + "|" + hex6 + ")\\)$" },
+			data: { mapping: true, regex: "^data\\s*\\(\\s*([\\w\\.]+)\\s*\\)$" },
+			mapData: { mapping: true, regex: "^mapData\\(([\\w\\.]+)\\s*\\,\\s*(" + number + ")\\s*\\,\\s*(" + number + ")\\s*,\\s*(" + number + "|\\w+|" + rgba + "|" + hsla + "|" + hex3 + "|" + hex6 + ")\\s*\\,\\s*(" + number + "|\\w+|" + rgba + "|" + hsla + "|" + hex3 + "|" + hex6 + ")\\)$" },
 			url: { regex: "^url\\s*\\(\\s*([^\\s]+)\\s*\\s*\\)|none|(.+)$" }
 		};
 
@@ -188,6 +192,7 @@
 			{ name: "font-variant", type: t.fontVariant },
 			{ name: "font-weight", type: t.fontWeight },
 			{ name: "font-size", type: t.size },
+			{ name: "min-zoomed-font-size", type: t.size },
 			{ name: "visibility", type: t.visibility },
 			{ name: "opacity", type: t.zeroOneNumber },
 			{ name: "z-index", type: t.nonNegativeInt },
@@ -268,7 +273,7 @@
 					"text-halign": "center",
 					"color": color,
 					"content": undefined, // => no label
-					"text-outline-color": "transparent",
+					"text-outline-color": "#000",
 					"text-outline-width": 0,
 					"text-outline-opacity": 1,
 					"text-opacity": 1,
@@ -279,16 +284,16 @@
 					"font-variant": fontVariant,
 					"font-weight": fontWeight,
 					"font-size": fontSize,
+					"min-zoomed-font-size": 0,
 					"visibility": "visible",
 					"opacity": 1,
 					"z-index": 0,
 					"content": "",
 					"overlay-opacity": 0,
 					"overlay-color": "#000",
-					"overlay-padding": 10
-				})
-			.selector("node") // just node properties
-				.css({
+					"overlay-padding": 10,
+
+					// node props
 					"background-color": "#888",
 					"background-opacity": 1,
 					"background-image": "none",
@@ -302,25 +307,32 @@
 					"padding-bottom": 0,
 					"padding-left": 0,
 					"padding-right": 0,
-					"shape": "ellipse"
-				})
-			.selector("$node > node") // compound (parent) node properties
-				.css({
-					"width": "auto",
-					"height": "auto",
-					"shape": "rectangle"
-				})
-			.selector("edge") // just edge properties
-				.css({
+					"shape": "ellipse",
+
+					// edge props
 					"source-arrow-shape": "none",
 					"target-arrow-shape": "none",
 					"source-arrow-color": "#bbb",
 					"target-arrow-color": "#bbb",
 					"line-style": "solid",
 					"line-color": "#bbb",
-					"width": 1,
 					"control-point-step-size": 40,
 					"curve-style": "bezier"
+				})
+			.selector("$node > node") // compound (parent) node properties
+				.css({
+					"width": "auto",
+					"height": "auto",
+					"shape": "rectangle",
+					"background-opacity": 0.5,
+					"padding-top": 10,
+					"padding-right": 10,
+					"padding-left": 10,
+					"padding-bottom": 10
+				})
+			.selector("edge") // just edge properties
+				.css({
+					"width": 1,
 				})
 			.selector(":active")
 				.css({
@@ -344,6 +356,8 @@
 
 	// remove all contexts
 	$$.styfn.clear = function(){
+		this._private.newStyle = true;
+
 		for( var i = 0; i < this.length; i++ ){
 			delete this[i];
 		}
@@ -705,7 +719,10 @@
 	// 
 	// for parsedProp:{ bypass: true }
 	// the generated flattenedProp:{ bypassed: parsedProp } 
-	$$.styfn.applyParsedProperty = function( ele, parsedProp ){
+	$$.styfn.applyParsedProperty = function( ele, parsedProp, context ){
+		parsedProp = $$.util.clone( parsedProp ); // copy b/c the same parsedProp may be applied to many elements, BUT
+		// the instances put in each element should be unique to avoid overwriting other the lists of other elements
+
 		var prop = parsedProp;
 		var style = ele._private.style;
 		var fieldVal, flatProp;
@@ -787,7 +804,7 @@
 			break;
 
 		case $$.style.types.data: // direct mapping
-			fieldVal = ele._private.data[ prop.field ];
+			fieldVal = eval('ele._private.data.' + prop.field );
 
 			flatProp = this.parse( prop.name, fieldVal, prop.bypass );
 			if( !flatProp ){ // if we can't flatten the property, then use the origProp so we still keep the mapping itself
@@ -816,31 +833,86 @@
 			style[ prop.name ] = prop; // and set
 		
 		} else { // prop is not bypass
+			var prevProp;
+
 			if( origPropIsBypass ){ // then keep the orig prop (since it's a bypass) and link to the new prop
+				prevProp = origProp.bypassed;
+				
 				origProp.bypassed = prop;
 			} else { // then just replace the old prop with the new one
+				prevProp = style[ prop.name ];
+
 				style[ prop.name ] = prop; 
 			}
+
+			if( prevProp && prevProp.mapping && prop.mapping && prevProp.context === context ){
+				prevProp = prevProp.prev;
+			}
+
+			if( prevProp && prevProp !== prop ){
+				prop.prev = prevProp;
+			}
 		}
+
+		prop.context = context;
 
 		return true;
 	};
 
-	// parse a property and then apply it
-	$$.styfn.applyProperty = function( ele, name, value ){
-		var parsedProp = this.parse(name, value);
-		if( !parsedProp ){ return false; } // can't apply if we can't parse
+	$$.styfn.rollBackContext = function( ele, context ){
+		for( var j = 0; j < context.properties.length; j++ ){ // for each prop
+			var prop = context.properties[j];
+			var eleProp = ele._private.style[ prop.name ];
 
-		return this.applyParsedProperty( ele, parsedProp );
+			// because bypasses do not store prevs, look at the bypassed property
+			if( eleProp.bypassed ){
+				eleProp = eleProp.bypassed;
+			}
+
+			var first = true;
+			var lastEleProp;
+			var l = 0;
+			while( eleProp.prev ){
+				var prev = eleProp.prev;
+
+				if( eleProp.context === context ){
+
+					if( first ){
+						ele._private.style[ prop.name ] = prev;
+					} else if( lastEleProp ){
+						lastEleProp.prev = prev;
+					}
+					
+				}
+
+				lastEleProp = eleProp;
+				eleProp = prev;
+				first = false;
+				l++;
+
+				// in case we have a problematic prev list
+				// if( l >= 100 ){
+				// 	debugger;
+				// }
+			}
+		}
 	};
+
 
 	// (potentially expensive calculation)
 	// apply the style to the element based on
 	// - its bypass
 	// - what selectors match it
 	$$.styfn.apply = function( eles ){
+		var self = this;
+
 		for( var ie = 0; ie < eles.length; ie++ ){
 			var ele = eles[ie];
+
+			if( self._private.newStyle ){
+				ele._private.styleCxts = [];
+				ele._private.style = {};
+			}
 
 			// apply the styles
 			for( var i = 0; i < this.length; i++ ){
@@ -849,14 +921,35 @@
 				var props = context.properties;
 
 				if( contextSelectorMatches ){ // then apply its properties
+
+					// apply the properties in the context
+					
 					for( var j = 0; j < props.length; j++ ){ // for each prop
 						var prop = props[j];
-						this.applyParsedProperty( ele, prop );
+
+						//if(prop.mapped) debugger;
+
+						if( !ele._private.styleCxts[i] || prop.mapped ){
+							this.applyParsedProperty( ele, prop, context );
+						}
 					}
+
+					// keep a note that this context matches
+					ele._private.styleCxts[i] = context;
+				} else {
+
+					// roll back style cxts that don't match now
+					if( ele._private.styleCxts[i] ){
+						this.rollBackContext( ele, context );
+					}
+
+					delete ele._private.styleCxts[i];
 				}
 			} // for context
 
 		} // for elements
+
+		self._private.newStyle = false;
 	};
 
 	// updates the visual style for all elements (useful for manual style modification after init)
@@ -1050,94 +1143,5 @@
 		}
 	};
 
-	// gets the control points for the specified edges (assuming bezier curve-style)
-	// 
-	$$.styfn.calculateControlPoints = function( parallelEdges ){
-		var ctrlpts = {};
-
-		var someEdgesAreBundled = false;
-		var numParallelEdges = parallelEdges.length;
-		for( var i = 0; i < parallelEdges.length; i++ ){
-			var e = parallelEdges[i];
-			var isBundled = e._private.style["curve-style"].strValue === "bundled";
-			if( isBundled ){
-				someEdgesAreBundled = true;
-				break;
-			}
-		}
-		var useStraightLineInMiddle = numParallelEdges % 2 !== 0 && !someEdgesAreBundled;
-		
-		// calculate the control point for each edge
-		for( var i = 0; i < parallelEdges.length; i++ ){ // index is the parallel index
-			var edge = parallelEdges[i];
-			var id = edge._private.data.id;
-
-			// source & target node stats
-			var src = edge.source();
-			var tgt = edge.target();
-			var srcPos = src.position();
-			var tgtPos = tgt.position();
-			var midpt = {
-				x: (srcPos.x + tgtPos.x)/2,
-				y: (srcPos.y + tgtPos.y)/2
-			};
-
-			var stepSize = edge._private.style["control-point-step-size"].pxValue;
-
-			var start = (numParallelEdges - 1) * -stepSize / 2;
-
-			if (src.id() == tgt.id()) {
-				parallelEdges[i]._private.rscratch.isSelfEdge = true;
-				
-				// For self-edges, use 2 quadratic Beziers, with control points West
-				// and North of the node
-				
-				edge._private.rscratch.cp2ax = srcPos.x;
-				edge._private.rscratch.cp2ay = srcPos.y - 1.3 * stepSize * (i / 3 + 1);
-				
-				edge._private.rscratch.cp2cx = srcPos.x - 1.3 * stepSize * (i / 3 + 1);
-				edge._private.rscratch.cp2cy = srcPos.y;
-				
-				edge._private.rscratch.selfEdgeMidX =
-					(edge._private.rscratch.cp2ax + edge._private.rscratch.cp2cx) / 2.0;
-				
-				edge._private.rscratch.selfEdgeMidY =
-					(edge._private.rscratch.cp2ay + edge._private.rscratch.cp2cy) / 2.0;
-				
-				continue;
-			}
-		
-			var distFromMidpt = start + stepSize * i; // NB may be negative to indicate other side
-
-			if (numParallelEdges % 2 == 1 
-				&& i == Math.floor(numParallelEdges / 2)) {
-				parallelEdges[i]._private.rscratch.isStraightEdge = true;
-				
-				continue;
-			}
-			
-			parallelEdges[i]._private.rscratch.isBezierEdge = true;
-			
-			var displacement = {
-				x: tgtPos.y - srcPos.y,
-				y: srcPos.x - tgtPos.x
-			};
-			var displacementLength = Math.sqrt(displacement.x * displacement.x
-				+ displacement.y * displacement.y);
-		
-			if (src.id() > tgt.id()) {
-				displacementLength *= -1;
-			}
-			
-			displacement.x /= displacementLength;
-			displacement.y /= displacementLength;
-			
-			parallelEdges[i]._private.rscratch.cp2x
-				= midpt.x + displacement.x * distFromMidpt;
-			
-			parallelEdges[i]._private.rscratch.cp2y
-				= midpt.y + displacement.y * distFromMidpt;
-		}
-	};
 
 })( cytoscape, typeof window === 'undefined' ? null : window );

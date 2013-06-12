@@ -137,6 +137,329 @@
 		}
 	});
 
+	$$.fn.eles({
+		// do a breadth first search from the nodes in the collection
+		// from pseudocode on wikipedia
+		breadthFirstSearch: function( fn, directed ){
+			fn = fn || function(){};
+			var cy = this._private.cy;
+			var v = this;
+			var Q = [];
+			var marked = {};
+			var id2depth = {};
+			var connectedFrom = {};
+			var connectedEles = [];
+
+			// enqueue v
+			for( var i = 0; i < v.length; i++ ){
+				if( v[i].isNode() ){
+					Q.unshift( v[i] );
+
+					// and mark v
+					marked[ v[i].id() ] = true;
+
+					id2depth[ v[i].id() ] = 0;
+
+					connectedEles.push( v[i] );
+				}
+			}
+
+			i = 0;
+			while( Q.length !== 0 ){ // while Q not empty
+				var t = Q.shift();
+				var depth = 0;
+
+				var fromNodeId = connectedFrom[ t.id() ];
+				while( fromNodeId ){
+					depth++;
+					fromNodeId = connectedFrom[ fromNodeId ];
+				}
+
+				id2depth[ t.id() ] = depth;
+				var ret = fn.call(t, i, depth);
+				i++;
+
+				// on return true, return the result
+				if( ret === true ){
+					return new $$.Collection( cy, [ t ] );
+				} 
+
+				// on return false, stop iteration
+				else if( ret === false ){
+					break;
+				}
+
+				var adjacentEdges = t.connectedEdges(directed ? '[source = "' + t.id() + '"]' : undefined);
+
+				for( var j = 0; j < adjacentEdges.length; j++ ){
+					var e = adjacentEdges[j];
+					var u = e.connectedNodes('[id != "' + t.id() + '"]');
+
+					if( u.length !== 0 ){
+						u = u[0];
+
+						if( !marked[ u.id() ] ){
+							marked[ u.id() ] = true; // mark u
+							Q.unshift( u ); // enqueue u onto Q
+							
+							connectedFrom[ u.id() ] = t.id();
+							
+							connectedEles.push( u );
+							connectedEles.push( e );
+						}
+					}
+				}
+			}
+
+			return new $$.Collection( cy, connectedEles ); // return none
+		},
+
+		// do a depth first search on the nodes in the collection
+		// from pseudocode on wikipedia (iterative impl)
+		depthFirstSearch: function( fn, directed ){
+			fn = fn || function(){};
+			var cy = this._private.cy;
+			var v = this;
+			var S = [];
+			var discovered = [];
+			var forwardEdge = {};
+			var backEdge = {};
+			var crossEdge = {};
+			var treeEdge = {};
+			var explored = {};
+
+			function labelled(e){
+				var id = e.id();
+				return forwardEdge[id] || backEdge[id] || crossEdge[id] || treeEdge[id];
+			}
+
+			// push v
+			for( var i = 0; i < v.length; i++ ){
+				if( v[i].isNode() ){
+					S.push( v[i] );
+
+					// and mark discovered
+					discovered[ v[i].id() ] = true;
+				}
+			}
+
+			while( S.length !== 0 ){
+				var t = S[ S.length - 1 ];
+				var ret = fn.call(t);
+				var breaked = false;
+
+				if( ret === true ){
+					return new $$.Collection( cy, [t] );
+				}
+
+				var adjacentEdges = t.connectedEdges(directed ? '[source = "' + t.id() + '"]' : undefined);
+				for( var i = 0; i < adjacentEdges.length; i++ ){
+					var e = adjacentEdges[i];
+
+					if( labelled(e) ){
+						continue;
+					}
+
+					var w = e.connectedNodes('[id != "' + t.id() + '"]');
+					if( w.length !== 0 ){
+						w = w[0];
+						var wid = w.id();
+
+						if( !discovered[wid] && !explored[wid] ){
+							treeEdge[wid] = true;
+							discovered[wid] = true;
+							S.push(w);
+							breaked = true;
+							break;
+						} else if( discovered[wid] ){
+							backEdge[wid] = true;
+						} else {
+							crossEdge[wid] = true;
+						}	
+					}
+				}
+
+				if( !breaked ){
+					explored[ t.id() ] = true;
+					S.pop();
+				}
+			}
+		},
+
+		// get the root nodes in the DAG
+		roots: function( selector ){
+			var eles = this;
+			var roots = [];
+			for( var i = 0; i < eles.length; i++ ){
+				var ele = eles[i];
+				if( !ele.isNode() ){
+					continue;
+				}
+
+				var hasEdgesPointingIn = ele.connectedEdges('[target = "' + ele.id() + '"][source != "' + ele.id() + '"]').length > 0;
+
+				if( !hasEdgesPointingIn ){
+					roots.push( ele );
+				}
+			}
+
+			return new $$.Collection( this._private.cy, roots ).filter( selector );
+		},
+
+		// kruskal's algorithm (finds min spanning tree, assuming undirected graph)
+		// implemented from pseudocode from wikipedia
+		kruskal: function( weightFn ){
+			weightFn = weightFn || function(){ return 1; }; // if not specified, assume each edge has equal weight (1)
+
+			function findSet(ele){
+				for( var i = 0; i < forest.length; i++ ){
+					var eles = forest[i];
+
+					if( eles.anySame(ele) ){
+						return {
+							eles: eles,
+							index: i
+						};
+					}
+				}
+			}
+
+			var A = new $$.Collection(this._private.cy, []);
+			var forest = [];
+			var nodes = this.nodes();
+
+			for( var i = 0; i < nodes.length; i++ ){
+				forest.push( nodes[i].collection() );
+			}
+
+			var edges = this.edges();
+			var S = edges.toArray().sort(function(a, b){
+				var weightA = weightFn.call(a);
+				var weightB = weightFn.call(b);
+
+				return weightA - weightB;
+			});
+
+			for(var i = 0; i < S.length; i++){
+				var edge = S[i];
+				var u = edge.source()[0];
+				var v = edge.target()[0];
+				var setU = findSet(u);
+				var setV = findSet(v);
+
+				if( setU.eles !== setV.eles ){
+					A = A.add( edge );
+
+					forest[ setU.index ] = setU.eles.add( setV.eles );
+					forest.splice( setV.index, 1 );
+				}
+			}
+
+			return nodes.add( A );
+
+		},
+
+		dijkstra: function( target, weightFn, directed ){
+			var cy = this._private.cy;
+			directed = !$$.is.fn(weightFn) ? weightFn : directed;
+			directed = directed === undefined || directed;
+			weightFn = $$.is.fn(weightFn) ? weightFn : function(){ return 1; }; // if not specified, assume each edge has equal weight (1)
+
+			if( this.length === 0 || !target || !$$.is.elementOrCollection(target) || target.length === 0 ){
+				return new $$.Collection(cy, []);
+			}
+
+			var source = this[0];
+			target = target[0];
+			var dist = {};
+			var prev = {};
+
+			var nodes = cy.nodes();
+			for( var i = 0; i < nodes.length; i++ ){
+				dist[ nodes[i].id() ] = Infinity;
+			}
+
+			dist[ source.id() ] = 0;
+			var Q = nodes;
+
+			var smallestDist = function(Q){
+				var smallest = Infinity;
+				var index;
+				for(var i in dist){
+					if( dist[i] < smallest && Q.$('#' + i).length !== 0 ){
+						smallest = dist[i];
+						index = i;
+					}
+				}
+
+				return index;
+			};
+
+			var distBetween = function(u, v){
+				var edges = u.edgesWith(v);
+				var smallestDistance = Infinity;
+				var smallestEdge;
+
+				for( var i = 0; i < edges.length; i++ ){
+					var edge = edges[i];
+					var weight = weightFn.call(edge);
+
+					if( weight < smallestDistance ){
+						smallestDistance = weight;
+						smallestEdge = edge;
+					}
+				}
+
+				return {
+					edge: smallestEdge,
+					dist: smallestDistance
+				};
+			};
+
+			while( Q.length !== 0 ){
+				var uid = smallestDist(Q);
+				var u = Q.filter('#' + uid);
+
+				if( u.length === 0 ){
+					continue;
+				}
+
+				//debugger;
+
+				Q = Q.not( u );
+
+				if( u.same(target) ){
+					break;
+				}
+
+				if( dist[uid] === Math.Infinite ){
+					break;
+				}
+
+				var neighbors = u.neighborhood().nodes();
+				for( var i = 0; i < neighbors.length; i++ ){
+					var v = neighbors[i];
+					var vid = v.id()
+
+					var duv = distBetween(u, v);
+					var alt = dist[uid] + duv.dist;
+					if( alt < dist[vid] ){
+						dist[vid] = alt;
+						prev[vid] = {
+							node: v,
+							edge: duv.edge
+						};
+						// TODO decrease-key v in Q
+					}
+				}
+			}
+		}  
+	});
+
+	// nice, short mathemathical alias
+	$$.elesfn.bfs = $$.elesfn.breadthFirstSearch;
+	$$.elesfn.dfs = $$.elesfn.depthFirstSearch;
+
 
 
 	// Neighbourhood functions

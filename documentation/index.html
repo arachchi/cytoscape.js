@@ -1,20 +1,42 @@
 <!DOCTYPE html>
 <html>
 	<head>
+		<meta name="description" content="A JavaScript graph library for analysis and visualisation (compatible with Node.js, jQuery 1.4+, and plain JavaScript)">
+		<meta http-equiv="content-type" content="text/html;charset=UTF-8">
+		<meta name="keywords" content="cytoscape,graph,graph theory,library,javascript,jquery,visualisation,visualization,node.js,node,example,demo,tutorial,layout,extension,plugin,api,documentation,node,edge,link,network,vertex,editor,interactive,json,dynamic,selector,compound,class,event,collection,pan,zoom,degree,grab,lock,select,binding,bind,listener,animation,iteration,search,analysis,filter,renderer,canvas,force directed">
+		<meta name="author" content="Max Franz">
+		<meta name="robots" content="all" />
 		<title>Cytoscape.js</title>
 
 		<link href="css/reset.css" rel="stylesheet" />
 		<link href="css/font-awesome.css" rel="stylesheet" />
 		<link href="css/style.css" rel="stylesheet" />
 
+		<script src="js/require.js"></script>
 		<script src="js/jquery.js"></script>
+		<script src="js/cytoscape.js"></script>
+		<script src="js/arbor.js"></script>
+		<script src="js/load.js"></script>
 		<script src="js/script.js"></script>
+		
 	</head>
 
 	<body>
 
+		<div id="cy-title"><pre class="content"></pre></div>
+		<div id="cy"></div>
+		<div id="cy-refresh">
+			<span class="icon-refresh"></span>
+		</div>
+		<div id="cy-show">
+			<span class="icon-plus"></span>
+		</div>
+		<div id="cy-hide">
+			<span class="icon-minus"></span>
+		</div>
+
 		<div id="navigation">
-			<div class="toc">Table of contents</div>
+			<div class="toc">Table of contents (<a href="#top"><span class="icon-bookmark"></span> top</a>)</div>
 
 			
 				<div class="section lvl1">
@@ -85,6 +107,13 @@
 
 					
 				
+					<div class="section lvl2">
+						
+						<a href="#notation/elements-json"><span class="icon-bookmark"></span> Elements JSON</a>
+					</div>
+
+					
+				
 			
 				<div class="section lvl1">
 					<span class="expander">
@@ -112,6 +141,13 @@
 					<div class="section lvl2">
 						
 						<a href="#selectors/data"><span class="icon-bookmark"></span> Data</a>
+					</div>
+
+					
+				
+					<div class="section lvl2">
+						
+						<a href="#selectors/compound-nodes"><span class="icon-bookmark"></span> Compound nodes</a>
 					</div>
 
 					
@@ -383,6 +419,8 @@
 					
 						<div class="section lvl3"><a href="#collection/position--dimensions/nodes.unlock"><span class="icon-bookmark"></span> nodes.unlock() </a></div>
 					
+						<div class="section lvl3"><a href="#collection/position--dimensions/ele.active"><span class="icon-bookmark"></span> ele.active() </a></div>
+					
 				
 					<div class="section lvl2">
 						<span class="expander">
@@ -541,6 +579,8 @@
 					
 						<div class="section lvl3"><a href="#collection/traversing/edges.codirectedEdges"><span class="icon-bookmark"></span> edges.codirectedEdges() </a></div>
 					
+						<div class="section lvl3"><a href="#collection/traversing/eles.breadthFirstSearch"><span class="icon-bookmark"></span> eles.breadthFirstSearch() </a></div>
+					
 				
 					<div class="section lvl2">
 						<span class="expander">
@@ -612,26 +652,23 @@
 
 		<div id="content">
 
-			<div class="title">Cytoscape.js <span class="version">2.0.0-beta3</span></div>
+			<div id="top" class="title">Cytoscape.js <span class="version">2.0.1</span></div>
 			<div class="subtitle">A JavaScript graph library for analysis and visualisation (compatible with <a href="http://nodejs.org/">Node.js</a>, <a href="http://jquery.com/">jQuery</a> 1.4+, and plain JavaScript)</div>
 			<div class="links">
-				<a href="https://github.com/cytoscape/cytoscape.js"><span class="icon-github"></span> GitHub</a> |
-				<a href="https://github.com/cytoscape/cytoscape.js/wiki/Downloads"><span class="icon-download-alt"></span> Downloads</a> |
-				<a href="https://twitter.com/cytoscape"><span class="icon-twitter"></span> Twitter</a> |
-				<a href="https://groups.google.com/forum/#!forum/cytoscape-discuss"><span class="icon-bullhorn"></span> Google Group</a> |
-				<a href="http://stackoverflow.com/questions/ask?tags=cytoscape.js"><span class="icon-comments"></span> Ask a code question</a> |
-				<a href="https://github.com/cytoscape/cytoscape.js/issues/new"><span class="icon-briefcase"></span> File an issue</a>
+				<a target="_blank" href="https://github.com/cytoscape/cytoscape.js"><span class="icon-github"></span> GitHub</a> |
+				<a target="_blank" href="https://github.com/cytoscape/cytoscape.js/wiki/Downloads"><span class="icon-download-alt"></span> Downloads</a> |
+				<a target="_blank" href="https://github.com/cytoscape/cytoscape.js/wiki/Live-code-examples"><span class="icon-star"></span> Live code examples</a> |
+				<a target="_blank" href="https://twitter.com/cytoscape"><span class="icon-twitter"></span> Twitter</a> |
+				<a target="_blank" href="https://groups.google.com/forum/#!forum/cytoscape-discuss"><span class="icon-bullhorn"></span> Google Group</a> |
+				<a target="_blank" href="http://stackoverflow.com/questions/ask?tags=cytoscape.js"><span class="icon-comments"></span> Ask a code question</a> |
+				<a target="_blank" href="https://github.com/cytoscape/cytoscape.js/issues/new"><span class="icon-briefcase"></span> File an issue</a>
 			</div>
 
-			
-			<div id="demo-link">
-				<a href="demo.html">
-					<img src="img/demo.png" />
+			<p>This is how easy it is to get started with Cytoscape.js (this code creates the instance you see on the bottom-right:</p>
 
-					<div class="description">Open a Cytoscape.js demo</div>
-				</a>
-			</div>	
-			
+			<div id="demo-source">
+				<iframe id="demo-code" src="js/load.js"></iframe>
+			</div>
 
 			<div id="documentation">
 			
@@ -698,9 +735,7 @@
 
 				
 					<ul>
-<li><p><strong>Compound nodes</strong> : A compound node is one that has children nodes.  They behave much like parent divs in HTML.  Support for compound nodes is half finished.  Support is in the core, and we will add support in the canvas renderer.</p>
-</li>
-<li><p><strong>Layouts from Cytoscape Web</strong> : Several layouts from Cytoscape Web will be written for Cytoscape.js, including the hierarchical layout, the circle layout, and so on.</p>
+<li><p><strong>Compound node layouts</strong> : We are in the process of porting layouts tailored to compound graphs to Cytoscape.js.  In the meanwhile, you can still use compound nodes with other layouts like <code>preset</code>.</p>
 </li>
 <li><p><strong>Graph importers</strong> : Cytoscape.js supports graph data in JSON format.  We will not be adding support for other formats in Cytoscape.js itself, but we will be working to create a separate library that could be used on the client side or the server side (via Node.js) to convert formats like GraphML and XGMML to JSON.</p>
 </li>
@@ -750,10 +785,80 @@ edge ......... a collection of a single edge</code></pre>
 </p>
 <p>In this documentation, &quot;position&quot; refers to model position unless otherwise stated.
 
+
 </p>
+<h2 id="notation/elements-json">Elements JSON <a href="#notation/elements-json"><span class="icon-bookmark"></span></a></h2>
+<p>Examples are given that outline format of the elements JSON used to load elements into Cytoscape.js:
+
+</p>
+<pre><code class="lang-js">$(&#39;#cy&#39;).cytoscape({
+
+  elements: [
+    { // node n1
+      group: &#39;nodes&#39;, // &#39;nodes&#39; for a node, &#39;edges&#39; for an edge
+
+      data: { // element data (put dev data here)
+          id: &#39;n1&#39;, // mandatory for each element, assigned automatically on undefined
+          parent: &#39;nparent&#39;, // indicates the compound node parent id; not defined =&gt; no parent
+      },
+
+      position: { // the model position of the node (optional on init, mandatory after)
+          x: 100,
+          y: 100
+      },
+
+      selected: false, // whether the element is selected (default false)
+
+      selectable: true, // whether the selection state is mutable (default true)
+
+      locked: false, // when locked a node&#39;s position is immutable (default false)
+
+      grabbable: true, // whether the node can be grabbed and moved by the user
+
+      classes: &#39;foo bar&#39; // a space separated list of class names that the element has
+    },
+
+    { // node n2
+      group: &#39;nodes&#39;,
+      data: { id: &#39;n2&#39; },
+      renderedPosition: { x: 200, y: 200 } // can alternatively specify position in rendered on-screen pixels
+    },
+
+    { // node n3
+      group: &#39;nodes&#39;,
+      data: { id: &#39;n3&#39;, parent: &#39;nparent&#39; },
+      position: { x: 123, y: 234 }
+    },
+
+    { // node nparent
+      group: &#39;nodes&#39;,
+      data: { id: &#39;nparent&#39; }
+    },
+
+    { // edge e1
+      group: &#39;edges&#39;,
+      data: {
+          id: &#39;e1&#39;,
+          source: &#39;n1&#39;, // the source node id (edge comes from this node)
+          target: &#39;n2&#39;  // the target node id (edge goes to this node)
+      }
+    }
+  ],
+
+  // so we can see the ids
+  style: cytoscape.stylesheet().
+    selector(&#39;node&#39;)
+      .css({
+          &#39;content&#39;: &#39;data(id)&#39;
+        })
+
+});</code></pre>
 
 				
 
+				
+				
+				
 				
 				
 				
@@ -775,18 +880,18 @@ edge ......... a collection of a single edge</code></pre>
 <p>The selectors can be combined together to make powerful queries in Cytoscape.js, for example:
 
 </p>
-<pre><code class="lang-js">// get all selected nodes with weight greater than or equal to 30
-cy.elements(&quot;node[weight &gt;= 30]:selected&quot;);</code></pre>
+<pre><code class="lang-js">// get all nodes with weight greater than or equal to 30
+cy.elements(&quot;node[weight &gt;= 50][height &lt; 180]&quot;);</code></pre>
 <p>Selectors can be joined together (effectively creating a logical OR) with commas:
 
 </p>
-<pre><code class="lang-js">// get both locked nodes AND selected edges 
-cy.elements(&quot;node:locked, edge:selected&quot;);</code></pre>
+<pre><code class="lang-js">// get node j and the edges coming out from it
+cy.elements(&quot;node#j, edge[source = &#39;j&#39;]&quot;);</code></pre>
 <p>It is important to note that strings need to be enclosed by quotation marks:
 
 </p>
-<pre><code class="lang-js">cy.filter(&quot;node[foo = bar]&quot;);   // this doesn&#39;t work
-cy.filter(&quot;node[foo = &#39;bar&#39;]&quot;); // but this does</code></pre>
+<pre><code class="lang-js">//cy.filter(&quot;node[name = Jerry]&quot;); // this doesn&#39;t work
+cy.filter(&quot;node[name = &#39;Jerry&#39;]&quot;); // but this does</code></pre>
 <h2 id="selectors/group-amp-class">Group &amp; class <a href="#selectors/group-amp-class"><span class="icon-bookmark"></span></a></h2>
 <p><strong><code>node</code> or <code>edge</code> (group selector)</strong><br>Matches elements based on group (<code>node</code> for nodes, <code>edge</code> for edges).
 
@@ -840,6 +945,18 @@ cy.filter(&quot;node[foo = &#39;bar&#39;]&quot;); // but this does</code></pre>
 </p>
 <p><strong><code>{}</code> (metadata brackets)</strong><br>Use curly brackets in place of square ones to match against metadata instead of data (e.g. <code>{degree &gt; 2}</code> matches elements of degree greater than 2).  The properties that are supported include <code>degree</code>, <code>indegree</code>, and <code>outdegree</code>.
 
+
+</p>
+<h2 id="selectors/compound-nodes">Compound nodes <a href="#selectors/compound-nodes"><span class="icon-bookmark"></span></a></h2>
+<p><strong><code>&gt;</code> (child selector)</strong><br>Matches direct children of the parent node (e.g. <code>node &gt; node</code>).
+
+</p>
+<p><strong><code>&nbsp;</code> (descendant selector)</strong><br>Matches descendants of the parent node (e.g. <code>node node</code>).
+
+</p>
+<p><strong><code>$</code> (subject selector)</strong><br>Sets the subject of the selector (e.g. <code>$node &gt; node</code> to select the parent nodes instead of the children).
+
+
 </p>
 <h2 id="selectors/state">State <a href="#selectors/state"><span class="icon-bookmark"></span></a></h2>
 <p><strong><code>:animated</code></strong><br>Matches elements that are currently being animated.
@@ -887,10 +1004,19 @@ cy.filter(&quot;node[foo = &#39;bar&#39;]&quot;); // but this does</code></pre>
 <p><strong><code>:removed</code></strong><br>Matches elements that have been removed from the graph.
 
 </p>
-<p><strong><code>:inside</code></strong><br>Matches elements that have are in the graph (they are not removed).</p>
+<p><strong><code>:inside</code></strong><br>Matches elements that have are in the graph (they are not removed).
+
+</p>
+<p><strong><code>:active</code></strong><br>Matches elements that are active (i.e. user interaction).
+
+</p>
+<p><strong><code>:inactive</code></strong><br>Matches elements that are inactive (i.e. no user interaction).</p>
 
 				
 
+				
+				
+				
 				
 				
 				
@@ -1028,6 +1154,10 @@ cy.filter(&quot;node[foo = &#39;bar&#39;]&quot;); // but this does</code></pre>
 <li><code>tapend</code> or <code>vmouseup</code> : normalised tap end event (either <code>mouseup</code> or <code>touchend</code>)</li>
 <li><code>tap</code> or <code>vclick</code> : normalised tap event (either <code>click</code>, or <code>touchstart</code> followed by <code>touchend</code> without <code>touchmove</code>)</li>
 <li><code>taphold</code> : normalised tap hold event</li>
+<li><code>cxttapstart</code> : normalised right-click mousedown or two-finger tapstart</li>
+<li><code>cxttapend</code> : normalised right-click mouseup or two-finger tapend</li>
+<li><code>cxttap</code> : normalised right-click or two-finger tap</li>
+<li><code>cxtdrag</code> : normalised mousemove or two-finger drag after <code>cxttapstart</code> but before <code>cxttapend</code></li>
 </ul>
 <h2 id="events/collection-events">Collection events <a href="#events/collection-events"><span class="icon-bookmark"></span></a></h2>
 <p>These events are custom to Cytoscape.js.  You can bind to these events for collections.
@@ -1098,14 +1228,14 @@ cy.filter(&quot;node[foo = &#39;bar&#39;]&quot;); // but this does</code></pre>
 <p>To use Cytoscape.js in Node.js:
 
 </p>
-<pre><code class="lang-js">var cytoscape = require(&#39;cytoscape&#39;);</code></pre>
+<pre><code>var cytoscape = require(&#39;cytoscape&#39;);</code></pre>
 <h3>Getting started</h3>
 <p>An instance of Cytoscape.js correeponds to a graph.  You can create an instance as follows:
 
 </p>
 <pre><code class="lang-js">cytoscape({
-  container: someHtmlDomElement,
-  ready: function(){}
+  container: document.getElementById(&#39;cy&#39;),
+  ready: function(){ console.log(&#39;ready&#39;) }
 });</code></pre>
 <p>If you are running Cytoscape.js in Node.js or otherwise running it headlessly, you will not specify the <code>container</code> option.
 
@@ -1116,8 +1246,11 @@ cy.filter(&quot;node[foo = &#39;bar&#39;]&quot;); // but this does</code></pre>
 <pre><code class="lang-js">$(&quot;#cy&quot;).cytoscape({ // for some div with id &#39;cy&#39;
   ready: function(){
     // you can access the core object API through cy
-  },
-  ...
+
+    console.log(&quot;ready&quot;);
+  }
+
+  // , ...
 });</code></pre>
 <p>This initialises Cytoscape.js and returns back to you your instance of jQuery.  You can continue using jQuery functions, as usual for a jQuery plugin.
 
@@ -1138,6 +1271,9 @@ var cy = $(&quot;#cy&quot;).cytoscape(&quot;get&quot;); // now we have a global 
 
 </p>
 <p>Because the <code>ready</code> event may occur before you can bind to the core, you can use this shortcut to spread your code among several JavaScript files without having to call a bunch of global functions in <code>options.ready</code>.
+
+</p>
+<p><strong>NB: You should never call layouts, load elements into the graph, etc on ready.  The graph is still performing the initial load at that point, so you can&#39;t modify things like that.  You should use the initialisation options to properly set the elements and layout you want to use.</strong>
 
 </p>
 <pre><code class="lang-js">// in foo.js
@@ -1164,15 +1300,16 @@ $(function(){ // on jquery ready
 
 </p>
 <pre><code class="lang-js">$(&quot;#cy&quot;).cytoscape({
-  layout: { ... },
+  showOverlay: false,
+  layout: { /* ... */ },
   zoom: 1,
   minZoom: 1e-50,
   maxZoom: 1e50,
   pan: { x: 0, y: 0 },
-  renderer: { ... },
-  style: { ... },
-  ready: function(evt){ ... },
-  elements: ...
+  renderer: { /* ... */ },
+  style: undefined /* ... */,
+  ready: function(evt){ /* ... */ },
+  elements: [ /* ... */ ]
 });</code></pre>
 <p><strong>layout</strong> : A plain object that specifies layout options.  Which layout is initially run is specified by the <code>name</code> field.  Refer to a layout&#39;s documentation for the options it supports.
 
@@ -1192,8 +1329,8 @@ $(function(){ // on jquery ready
 <p>For example:
 
 </p>
-<pre><code class="lang-js">{
-  ...
+<pre><code class="lang-js">$(&quot;#cy&quot;).cytoscape({
+  /* ... */
 
   style: cytoscape.stylesheet()
     .selector(&#39;node&#39;)
@@ -1206,9 +1343,12 @@ $(function(){ // on jquery ready
         &#39;line-color&#39;: &#39;blue&#39;
       })
 
-  ...
-}</code></pre>
+  /* ... */
+});</code></pre>
 <p><strong>ready</strong> : A callback function that is called when Cytoscape.js is ready to be interacted with.  You can not call functions on the <code>cy</code> object before this function executes.
+
+</p>
+<p><strong>showOverlay</strong> : A boolean, indacating whether you&#39;d like to see the &quot;cytoscape.js&quot; overlay in the bottom right of the viewport (default <code>true</code>).
 
 </p>
 <p><strong>elements</strong> : An array of elements specified as plain objects.
@@ -1217,8 +1357,8 @@ $(function(){ // on jquery ready
 <p>For example:
 
 </p>
-<pre><code class="lang-js">{
-  ...
+<pre><code class="lang-js">$(&#39;#cy&#39;).cytoscape({
+  /* ... */
 
   elements: [
     {
@@ -1251,28 +1391,42 @@ $(function(){ // on jquery ready
     }
   ]
 
-  ...
-}</code></pre>
+  /* ... */
+});</code></pre>
 <p>You can alternatively specify separate arrays indexed in a object by the group names so you don&#39;t have to specify the <code>group</code> property over and over for each element:
 
 </p>
-<pre><code class="lang-js">{
-  ...
+<pre><code class="lang-js">$(&#39;#cy&#39;).cytoscape({
+  /* ... */
 
   elements: {
     nodes: [
       { data: { id: &#39;foo&#39; } }, // NB no group specified
-      { ... },
-      { ... }
+
+      { data: { id: &#39;bar&#39; } },
+
+      {
+        data: { weight: 100 }, // elided id =&gt; autogenerated id 
+        group: &#39;nodes&#39;,
+        position: {
+          x: 100,
+          y: 100
+        },
+        classes: &#39;className1 className2&#39;,
+        selected: true,
+        selectable: true,
+        locked: true,
+        grabbable: true
+      }
     ],
 
     edges: [
-      { ... }
+      { data: { id: &#39;baz&#39;, source: &#39;foo&#39;, target: &#39;bar&#39; } } // NB no group specified
     ]
   }
 
-  ...
-}</code></pre>
+  /* ... */
+});</code></pre>
 
 					
 
@@ -1360,7 +1514,11 @@ $(function(){ // on jquery ready
 <p>Add a node from a plain object.
 
 </p>
-<pre><code class="lang-js">cy.add({ group: &quot;nodes&quot;, data: { id: &quot;n0&quot; } });</code></pre>
+<pre><code class="lang-js">cy.add({
+    group: &quot;nodes&quot;,
+    data: { weight: 75 },
+    position: { x: 200, y: 200 }
+});</code></pre>
 <p>Add nodes and edges to the graph as plain objects:
 
 </p>
@@ -1370,17 +1528,6 @@ var eles = cy.add([
   { group: &quot;nodes&quot;, data: { id: &quot;n1&quot; }, position: { x: 200, y: 200 } },
   { group: &quot;edges&quot;, data: { id: &quot;e0&quot;, source: &quot;n0&quot;, target: &quot;n1&quot; } }
 ]);</code></pre>
-<p>Add elements:
-
-</p>
-<pre><code class="lang-js">var n0 = cy.node(&quot;n1&quot;);
-var n1 = cy.node(&quot;n2&quot;);
-var e0 = cy.edge(&quot;e0&quot;);
-n1.collection().add(n2).add(n3).remove(); // remove n0, n1, and e0
-
-var n1e0 = n1.collection().add(e0);
-cy.add(n0); // add a single element, n0
-cy.add(n1e0); // add the collection of n1 and e0</code></pre>
 
 								
 							</div>		
@@ -1440,17 +1587,17 @@ cy.add(n1e0); // add the collection of n1 and e0</code></pre>
 <p>Remove an element:
 
 </p>
-<pre><code class="lang-js">var n0 = cy.nodes(&quot;#n0&quot;);
-cy.remove(n0);</code></pre>
+<pre><code class="lang-js">var j = cy.$(&quot;#j&quot;);
+cy.remove( j );</code></pre>
 <p>Remove a collection:
 
 </p>
-<pre><code class="lang-js">var collection = cy.elements(&quot;node[weight&gt;50]&quot;);
-cy.remove(collection);</code></pre>
+<pre><code class="lang-js">var collection = cy.elements(&quot;node[weight &gt; 50]&quot;);
+cy.remove( collection );</code></pre>
 <p>Remove elements matching a selector:
 
 </p>
-<pre><code class="lang-js">cy.remove(&quot;node[weight&gt;50]&quot;); // remove nodes with weight greater than 50</code></pre>
+<pre><code class="lang-js">cy.remove(&quot;node[weight &gt; 50]&quot;); // remove nodes with weight greater than 50</code></pre>
 
 								
 							</div>		
@@ -1534,7 +1681,7 @@ cy.remove(collection);</code></pre>
 </p>
 <pre><code class="lang-js">cy.one(&quot;load&quot;, function(e){
   console.log(&quot;cy loaded elements&quot;);
-}).one(&quot;layoutdone&quot;, function(e){
+}).one(&quot;layoutstop&quot;, function(e){
   console.log(&quot;cy laid out elements&quot;);
 });
 
@@ -1579,8 +1726,14 @@ cy.load([ { data: { id: &quot;n1&quot; }, group: &quot;nodes&quot; } ]);</code><
 </p>
 <h3>Examples</h3>
 <pre><code class="lang-js">cy.batchData({
-  &#39;n0&#39;: { foo: 1, bar: 1 },
-  &#39;n1&#39;: { foo: 2, bar: 2 }
+  &#39;j&#39;: {
+      weight: 73 // too much non-fat yoghourt
+  },
+
+  &#39;g&#39;: {
+      weight: 72,
+      height: 154 // shoe inserts
+  }
 });</code></pre>
 
 								
@@ -1749,17 +1902,17 @@ cy.nodes().live(&quot;click&quot;, function(){
 <h3>Examples</h3>
 <p>Get nodes with weight greater than 50:
 </p>
-<pre><code class="lang-js">var collection = cy.nodes(&quot;[weight&gt;50]&quot;);</code></pre>
+<pre><code class="lang-js">cy.nodes(&quot;[weight&gt;50]&quot;);</code></pre>
 <p>Get edges with source node <code>n0</code>:
 </p>
-<pre><code class="lang-js">var collection = cy.edges(&quot;[source=n0]&quot;);</code></pre>
+<pre><code class="lang-js">cy.edges(&quot;[source=&#39;j&#39;]&quot;);</code></pre>
 <p>Get all nodes and edges with weight greater than 50:
 </p>
-<pre><code class="lang-js">var collection = cy.elements(&quot;[weight&gt;50]&quot;);
-collection = cy.filter(&quot;[weight&gt;50]&quot;); // works the same as the above line</code></pre>
+<pre><code class="lang-js">cy.elements(&quot;[weight&gt;50]&quot;);
+cy.filter(&quot;[weight&gt;50]&quot;); // works the same as the above line</code></pre>
 <p>Get nodes with weight greater than 50 with a filter function:
 </p>
-<pre><code class="lang-js">var collection = cy.filter(function(i, element){
+<pre><code class="lang-js">cy.filter(function(i, element){
   if( element.isNode() &amp;&amp; element.data(&quot;weight&quot;) &gt; 50 ){
     return true;
   }
@@ -1823,10 +1976,10 @@ collection = cy.filter(&quot;[weight&gt;50]&quot;); // works the same as the abo
 
 </p>
 <h3>Examples</h3>
-<p>Centre the graph on node <code>n0</code>:
+<p>Centre the graph on node <code>j</code>:
 </p>
-<pre><code class="lang-js">var n0 = cy.node(&quot;n0&quot;);
-cy.center(n0);</code></pre>
+<pre><code class="lang-js">var j = cy.$(&quot;#j&quot;);
+cy.center( j );</code></pre>
 
 								
 							</div>		
@@ -1879,14 +2032,13 @@ cy.center(n0);</code></pre>
 							<div class="details">
 								
 									<h3>Details</h3>
-<p>If an empty collection or no collection is specified, then the graph is centred on all nodes and edges in the graph.
+<p>If an empty collection or no collection is specified, then the graph is fit to all nodes and edges in the graph.
 
 </p>
 <h3>Examples</h3>
-<p>Centre the graph on node <code>n0</code>:
+<p>Fit the graph on nodes <code>j</code> and <code>e</code>:
 </p>
-<pre><code class="lang-js">var n0 = cy.node(&quot;n0&quot;);
-cy.center(n0);</code></pre>
+<pre><code class="lang-js">cy.fit( cy.$(&#39;#j, #e&#39;) );</code></pre>
 
 								
 							</div>		
@@ -1919,9 +2071,17 @@ cy.center(n0);</code></pre>
 
 </p>
 <h3>Examples</h3>
-<pre><code class="lang-js">cy.pan({ x: 100, y: 100 });
-cy.zoom( 2 );
-cy.reset();</code></pre>
+<pre><code class="lang-js">setTimeout( function(){
+    cy.pan({ x: 50, y: -100 });
+}, 1000 );
+
+setTimeout( function(){
+    cy.zoom( 2 );
+}, 2000 );
+
+setTimeout( function(){
+    cy.reset();
+}, 3000 );</code></pre>
 
 								
 							</div>		
@@ -2156,17 +2316,17 @@ console.log( cy.pan() ); // prints { x: 100, y: 100 }</code></pre>
 <p>For zooming about a rendered position (i.e. a position on-screen):
 
 </p>
-<pre><code class="lang-js">var options = {
+<pre><code class="lang-js">cy.zoom({
   level: 2.0, // the zoom level
   renderedPosition: { x: 100, y: 100 }
-};</code></pre>
+});</code></pre>
 <p>For zooming about a model position:
 
 </p>
-<pre><code class="lang-js">var options = {
+<pre><code class="lang-js">cy.zoom({
   level: 2.0, // the zoom level
-  position: { x: 500, y: 625 }
-};</code></pre>
+  position: { x: 0, y: 0 }
+});</code></pre>
 <p>For obvious reasons, you can zoom about a position or a rendered position but not both.  You should specify only one of <code>options.position</code> or <code>options.renderedPosition</code>.
 
 </p>
@@ -2184,9 +2344,9 @@ console.log( cy.pan() ); // prints { x: 100, y: 100 }</code></pre>
               // its closest valid level is the max</code></pre>
 <p>Zoom about a node
 </p>
-<pre><code class="lang-js">var pos = cy.nodes(&quot;#n0&quot;).position();
+<pre><code class="lang-js">var pos = cy.nodes(&quot;#j&quot;).position();
 cy.zoom({
-  level: 2.5,
+  level: 1.5,
   position: pos
 });</code></pre>
 
@@ -2462,26 +2622,27 @@ cy.zoom({
 							<div class="details">
 								
 									<h3>Examples</h3>
-<p>Bind to events that bubble up from elements matching the specified <code>nodes</code> selector:
+<p>Bind to events that bubble up from elements matching the specified <code>node</code> selector:
 </p>
-<pre><code class="lang-js">cy.on(&#39;click&#39;, &#39;nodes&#39;, { foo: &#39;bar&#39; }, function(evt){
+<pre><code class="lang-js">cy.on(&#39;tap&#39;, &#39;node&#39;, { foo: &#39;bar&#39; }, function(evt){
   console.log( evt.data.foo ); // &#39;bar&#39;
 
-  var node = this;
-  console.log( &#39;clicked &#39; + node.id() );
+  var node = evt.cyTarget;
+  console.log( &#39;tapped &#39; + node.id() );
+  debugger;
 });</code></pre>
-<p>Bind to all click events that the core receives:
+<p>Bind to all tap events that the core receives:
 
 </p>
-<pre><code class="lang-js">cy.on(&#39;click&#39;, function(event){
+<pre><code class="lang-js">cy.on(&#39;tap&#39;, function(event){
   // cyTarget holds a reference to the originator
   // of the event (core or element)
   var evtTarget = event.cyTarget;
 
   if( evtTarget === cy ){
-      console.log(&#39;click on background&#39;);
+      console.log(&#39;tap on background&#39;);
   } else {
-    console.log(&#39;click on some element&#39;);
+    console.log(&#39;tap on some element&#39;);
   }
 });</code></pre>
 
@@ -2566,12 +2727,12 @@ cy.zoom({
 							<div class="details">
 								
 									<h3>Examples</h3>
-<pre><code class="lang-js">cy.one(&#39;click&#39;, &#39;node&#39;, function(){
-  console.log(&#39;click!&#39;);
+<pre><code class="lang-js">cy.one(&#39;tap&#39;, &#39;node&#39;, function(){
+  console.log(&#39;tap!&#39;);
 });
 
-cy.$(&#39;node&#39;).eq(0).trigger(&#39;click&#39;); // click!
-cy.$(&#39;node&#39;).eq(1).trigger(&#39;click&#39;); // nothing b/c already clicked</code></pre>
+cy.$(&#39;node&#39;).eq(0).trigger(&#39;tap&#39;); // tap!
+cy.$(&#39;node&#39;).eq(1).trigger(&#39;tap&#39;); // nothing b/c already tapped</code></pre>
 
 								
 							</div>		
@@ -2648,25 +2809,25 @@ cy.$(&#39;node&#39;).eq(1).trigger(&#39;click&#39;); // nothing b/c already clic
 <p>For all handlers:
 
 </p>
-<pre><code class="lang-js">cy.on(&quot;click&quot;, function(){ /* ... */ });
+<pre><code class="lang-js">cy.on(&quot;tap&quot;, function(){ /* ... */ });
 
-// unbind all click handlers, including the one above
-cy.off(&quot;click&quot;);</code></pre>
+// unbind all tap handlers, including the one above
+cy.off(&quot;tap&quot;);</code></pre>
 <p>For a particular handler:
 
 </p>
 <pre><code class="lang-js">var handler = function(){
   console.log(&quot;called handler&quot;);
 };
-cy.on(&quot;click&quot;, handler);
+cy.on(&quot;tap&quot;, handler);
 
 var otherHandler = function(){
   console.log(&quot;called other handler&quot;);
 };
-cy.on(&quot;click&quot;, otherHandler);
+cy.on(&quot;tap&quot;, otherHandler);
 
 // just unbind handler
-cy.off(&quot;click&quot;, handler);</code></pre>
+cy.off(&quot;tap&quot;, handler);</code></pre>
 
 								
 							</div>		
@@ -2709,11 +2870,11 @@ cy.off(&quot;click&quot;, handler);</code></pre>
 							<div class="details">
 								
 									<h3>Examples</h3>
-<pre><code class="lang-js">cy.bind(&#39;click&#39;, function(evt, foo, bar){
-  console.log(&#39;click&#39;);
+<pre><code class="lang-js">cy.bind(&#39;tap&#39;, function(evt, foo, bar){
+  console.log(&#39;tap&#39;);
 });
 
-cy.trigger(&#39;click&#39;, [&#39;foo&#39;, &#39;bar&#39;]);</code></pre>
+cy.trigger(&#39;tap&#39;, [&#39;foo&#39;, &#39;bar&#39;]);</code></pre>
 
 								
 							</div>		
@@ -2764,32 +2925,70 @@ cy.trigger(&#39;click&#39;, [&#39;foo&#39;, &#39;bar&#39;]);</code></pre>
 <p><em>The <code>random</code> layout:</em>
 </p>
 <pre><code class="lang-js">options = {
+    name: &#39;random&#39;,
     ready: undefined, // callback on layoutready
     stop: undefined, // callback on layoutstop
     fit: true // whether to fit to viewport
-};</code></pre>
+};
+
+cy.layout( options );</code></pre>
 <p><em>The <code>preset</code> layout puts nodes in the positions you specify manually:</em>
 </p>
 <pre><code class="lang-js">options = {
+    name: &#39;preset&#39;,
     fit: true, // whether to fit to viewport
     ready: undefined, // callback on layoutready
     stop: undefined, // callback on layoutstop
     positions: undefined, // map of (node id) =&gt; (position obj)
     zoom: undefined, // the zoom level to set (prob want fit = false if set)
     pan: undefined // the pan level to set (prob want fit = false if set)
-};</code></pre>
+};
+
+cy.layout( options );</code></pre>
 <p><em>The <code>grid</code> layout puts nodes in a well-spaced grid:</em>
 </p>
 <pre><code class="lang-js">options = {
+    name: &#39;grid&#39;,
     fit: true, // whether to fit the viewport to the graph
     rows: undefined, // force num of rows in the grid
     columns: undefined, // force num of cols in the grid
     ready: undefined, // callback on layoutready
     stop: undefined // callback on layoutstop
-};</code></pre>
+};
+
+cy.layout( options );</code></pre>
+<p><em>The <code>breadthfirst</code> layout puts nodes in a hierarchy:</em>
+</p>
+<pre><code class="lang-js">options = {
+    name: &#39;breadthfirst&#39;,
+    fit: true, // whether to fit the viewport to the graph
+    ready: undefined, // callback on layoutready
+    stop: undefined, // callback on layoutstop
+    directed: true, // whether the tree is directed downwards (or edges can point in any direction if false)
+    padding: 30, // padding on fit
+    circle: false, // put depths in concentric circles if true, put depths top down if false
+    roots: undefined // the roots of the trees
+};
+
+cy.layout( options );</code></pre>
+<p><em>The <code>circle</code> layout puts nodes in a circle:</em>
+</p>
+<pre><code class="lang-js">options = {
+    name: &#39;circle&#39;,
+    fit: true, // whether to fit the viewport to the graph
+    ready: undefined, // callback on layoutready
+    stop: undefined, // callback on layoutstop
+    rStepSize: 10, // the step size for increasing the radius if the nodes don&#39;t fit on screen
+    padding: 30, // the padding on fit
+    startAngle: 3/2 * Math.PI, // the position of the first node
+    counterclockwise: false // whether the layout should go counterclockwise (true) or clockwise (false)
+};
+
+cy.layout( options );</code></pre>
 <p><em>The <code>arbor</code> layout uses a force-directed simulation:</em>
 </p>
 <pre><code class="lang-js">options = {
+    name: &#39;arbor&#39;,
     liveUpdate: true, // whether to show the layout as it&#39;s running
     ready: undefined, // callback on layoutready 
     stop: undefined, // callback on layoutstop
@@ -2819,7 +3018,10 @@ cy.trigger(&#39;click&#39;, [&#39;foo&#39;, &#39;bar&#39;]);</code></pre>
         var e = energy; 
         return (e.max &lt;= 0.5) || (e.mean &lt;= 0.3);
     }
-};</code></pre>
+};
+
+
+cy.layout( options );</code></pre>
 <p>NB: You must reference the version of <code>arbor.js</code> included with Cytoscape.js in the <code>&lt;head&gt;</code> of your HTML document:
 
 </p>
@@ -2862,9 +3064,18 @@ cy.trigger(&#39;click&#39;, [&#39;foo&#39;, &#39;bar&#39;]);</code></pre>
   .resetToDefault() // start a fresh default stylesheet
 
   // and then define new styles
+  .selector(&#39;node&#39;)
+      .css(&#39;background-color&#39;, &#39;blue&#39;)
   .selector(&#39;node:selected&#39;)
-    .css({ ... })
-  ...</code></pre>
+    .css({
+      &#39;background-color&#39;: &#39;red&#39;,
+
+      // , ...
+    })
+
+  // ...
+
+  .update()</code></pre>
 
 								
 							</div>		
@@ -2880,10 +3091,9 @@ cy.trigger(&#39;click&#39;, [&#39;foo&#39;, &#39;bar&#39;]);</code></pre>
 					<p>A collection contains a set of nodes and edges.  Calling a function applies the function to all elements in the collection.  When reading values from a collection, <code>eles.data()</code> for example, the value of the first element in the collection is returned.  This follows the jQuery convention.  For example:
 
 </p>
-<pre><code class="lang-js">// assume graph:
-// n1[weight = 10], n2[weight = 60], n3[weight = 90]
+<pre><code class="lang-js">var weight = cy.nodes().data(&quot;weight&quot;);
 
-var weight = cy.nodes().data(&quot;weight&quot;); // returns 10</code></pre>
+console.log( cy.nodes()[0].data(&quot;weight&quot;) + &#39; == &#39; + weight ); // weight is the first ele&#39;s weight</code></pre>
 <p>You can insure that you&#39;re reading from the element you want by using a <a href="#selectors">selector</a> to narrow down the collection to one element (i.e. <code>eles.size() === 1</code>) or the <code>eles.eq()</code> function.</p>
 
 				
@@ -3050,22 +3260,21 @@ eles.restore();</code></pre>
 <ul>
 <li><code>id</code> : The <code>id</code> field is used to uniquely identify an element in the graph.</li>
 <li><code>source</code> &amp; <code>target</code> : These fields define an edge&#39;s relationship to nodes, and this relationship can not be changed after creation.</li>
-<li><code>parent</code> : The <code>parent</code> field is a reserved field for the future implementation of compound nodes.</li>
+<li><code>parent</code> : The <code>parent</code> field defines the parent (compound) node.</li>
 </ul>
 <h3>Examples</h3>
-<pre><code class="lang-js">var n1 = cy.$(&#39;#n1&#39;);
+<pre><code class="lang-js">var j = cy.$(&#39;#j&#39;);
 
 // set the weight field in data
-n1.data(&#39;weight&#39;, 75);
+j.data(&#39;weight&#39;, 60);
 
 // set several fields at once
-n1.data({
-  foo: &#39;some value&#39;,
-  bar: &#39;another value&#39;,
-  baz: &#39;yet another value&#39;
+j.data({
+  name: &#39;Jerry Jerry Dingleberry&#39;,
+  height: 176
 });
 
-var weight = n1.data(&#39;weight&#39;);</code></pre>
+var weight = j.data(&#39;weight&#39;);</code></pre>
 
 								
 							</div>		
@@ -3117,7 +3326,7 @@ var weight = n1.data(&#39;weight&#39;);</code></pre>
 <ul>
 <li><code>id</code> : The <code>id</code> field is used to uniquely identify an element in the graph.</li>
 <li><code>source</code> &amp; <code>target</code> : These fields define an edge&#39;s relationship to nodes, and this relationship can not be changed after creation.</li>
-<li><code>parent</code> : The <code>parent</code> field is a reserved field for the future implementation of compound nodes.</li>
+<li><code>parent</code> : The <code>parent</code> field defines the parent (compound) node.</li>
 </ul>
 
 								
@@ -3414,19 +3623,19 @@ var weight = n1.data(&#39;weight&#39;);</code></pre>
 
 </p>
 <h3>Examples</h3>
-<pre><code class="lang-js">// get x for n1
-var x = cy.$(&#39;#n1&#39;).position(&#39;x&#39;);
+<pre><code class="lang-js">// get x for j
+var x = cy.$(&#39;#j&#39;).position(&#39;x&#39;);
 
-// get the whole position for n2
-var pos = cy.$(&#39;#n2&#39;).position();
+// get the whole position for e
+var pos = cy.$(&#39;#e&#39;).position();
 
-// set y for n1
-cy.$(&#39;#n1&#39;).position(&#39;y&#39;, 100);
+// set y for j
+cy.$(&#39;#j&#39;).position(&#39;y&#39;, 100);
 
 // set multiple
-cy.$(&#39;#n2&#39;).position({
+cy.$(&#39;#e&#39;).position({
   x: 123,
-  y: 456
+  y: 200
 });</code></pre>
 
 								
@@ -3749,6 +3958,17 @@ cy.$(&#39;#n2&#39;).position({
 							</div>		
 						</div>
 					
+						<div class="function">
+							<div class="name" id="collection/position--dimensions/ele.active"><span class="fn-name">ele.active()</span>  <a href="#collection/position--dimensions/ele.active"><span class="icon-bookmark"></span></a></div>
+							<div class="descr" id="collection/position--dimensions/ele.active">Gets whether the element is active.</div>
+
+							
+
+							<div class="details">
+								
+							</div>		
+						</div>
+					
 
 				
 				
@@ -3917,12 +4137,12 @@ cy.$(&#39;#n2&#39;).position({
 							<div class="details">
 								
 									<h3>Defails</h3>
-<p>In the handler function, <code>this</code> references the element that triggered the event.
+<p>In the handler function, <code>this</code> references the originally bound object, and <code>evt.cyTarget</code> references the target of the event.
 
 </p>
 <h3>Examples</h3>
-<pre><code class="lang-js">cy.on(&#39;click&#39;, function(evt){
-  console.log( &#39;clicked &#39; + this.id() );
+<pre><code class="lang-js">cy.on(&#39;tap&#39;, function(evt){
+  console.log( &#39;tap &#39; + evt.cyTarget.id() );
 });</code></pre>
 
 								
@@ -4010,14 +4230,10 @@ cy.$(&#39;#n2&#39;).position({
 
 </p>
 <h3>Examples</h3>
-<pre><code class="lang-js">cy.$(&#39;node&#39;).one(&#39;click&#39;, function(){
-  var ele = this;
-  console.log(&#39;clicked &#39; + ele.id());
-});
-
-cy.$(&#39;#n1&#39;).trigger(&#39;click&#39;); // clicked n1
-cy.$(&#39;#n1&#39;).trigger(&#39;click&#39;); // nothing
-cy.$(&#39;#n2&#39;).trigger(&#39;click&#39;); // clicked n2</code></pre>
+<pre><code class="lang-js">cy.$(&#39;node&#39;).one(&#39;tap&#39;, function(e){
+  var ele = e.cyTarget;
+  console.log(&#39;tapped &#39; + ele.id());
+});</code></pre>
 
 								
 							</div>		
@@ -4104,14 +4320,10 @@ cy.$(&#39;#n2&#39;).trigger(&#39;click&#39;); // clicked n2</code></pre>
 
 </p>
 <h3>Examples</h3>
-<pre><code class="lang-js">cy.$(&#39;node&#39;).once(&#39;click&#39;, function(){
-  var ele = this;
+<pre><code class="lang-js">cy.$(&#39;node&#39;).once(&#39;click&#39;, function(e){
+  var ele = e.cyTarget;
   console.log(&#39;clicked &#39; + ele.id());
-});
-
-cy.$(&#39;#n1&#39;).trigger(&#39;click&#39;); // clicked n1
-cy.$(&#39;#n1&#39;).trigger(&#39;click&#39;); // nothing
-cy.$(&#39;#n2&#39;).trigger(&#39;click&#39;); // nothing</code></pre>
+});</code></pre>
 
 								
 							</div>		
@@ -4178,26 +4390,26 @@ cy.$(&#39;#n2&#39;).trigger(&#39;click&#39;); // nothing</code></pre>
 							<div class="details">
 								
 									<h3>Examples</h3>
-<pre><code class="lang-js">var n1 = cy.$(&#39;#n1&#39;);
-var handler = function(){ console.log(&#39;click&#39;) };
+<pre><code class="lang-js">var j = cy.$(&#39;#j&#39;);
+var handler = function(){ console.log(&#39;tap&#39;) };
 
 // bind
-n1.on(&#39;click&#39;, handler);
+j.on(&#39;tap&#39;, handler);
 
 // bind some other handler
-n1.on(&#39;click&#39;, function(){
+j.on(&#39;tap&#39;, function(){
   console.log(&#39;some other handler&#39;);
 });
 
-n1.trigger(&#39;click&#39;); // &#39;click&#39; &amp; &#39;some other handler&#39;
+j.trigger(&#39;tap&#39;); // &#39;tap&#39; &amp; &#39;some other handler&#39;
 
 // unbind the renferenced handler
-n1.off(&#39;click&#39;, handler);
+j.off(&#39;tap&#39;, handler);
 
-n1.trigger(&#39;click&#39;); // some other handler
+j.trigger(&#39;tap&#39;); // some other handler
 
-// unbind all click handlers (including unnamed handler)
-n1.off(&#39;click&#39;);</code></pre>
+// unbind all tap handlers (including unnamed handler)
+j.off(&#39;tap&#39;);</code></pre>
 
 								
 							</div>		
@@ -4240,13 +4452,13 @@ n1.off(&#39;click&#39;);</code></pre>
 							<div class="details">
 								
 									<h3>Examples</h3>
-<pre><code class="lang-js">var n1 = cy.$(&#39;#n1&#39;);
+<pre><code class="lang-js">var j1 = cy.$(&#39;#j1&#39;);
 
-n1.on(&#39;click&#39;, function(){
-  console.log(&#39;click!!&#39;);
+j1.oj(&#39;tap&#39;, fujctioj(){
+  cojsole.log(&#39;tap!!&#39;);
 });
 
-n1.trigger(&#39;click&#39;); // click!!</code></pre>
+j1.trigger(&#39;tap&#39;); // tap!!</code></pre>
 
 								
 							</div>		
@@ -5468,6 +5680,69 @@ n1.trigger(&#39;click&#39;); // click!!</code></pre>
 							</div>		
 						</div>
 					
+						<div class="function">
+							<div class="name" id="collection/traversing/eles.breadthFirstSearch"><span class="fn-name">eles.breadthFirstSearch()</span>  <a href="#collection/traversing/eles.breadthFirstSearch"><span class="icon-bookmark"></span></a></div>
+							<div class="descr" id="collection/traversing/eles.breadthFirstSearch">Perform a breadth-first search, with this collection as the root nodes of the search.</div>
+
+							
+							<div class="formats">
+								
+									<div class="format">
+										
+											<div class="name">eles.breadthFirstSearch(  [<span class="comma">, </span>function(i, depth)] [<span class="comma">, </span>directed] )</div>
+										
+										<div class="descr"></div>
+										<ul class="args">
+											
+												<li>
+													<span class="name">function(i, depth)</span>
+													<span class="descr">A handler function that is called when a node is visited in the search.</span>
+
+													
+													<ul class="fields">
+														
+														<li>&ndash;
+															<span class="name">i</span>
+															<span class="descr">The index indicating this node is the ith visited node.</span>
+														</li>
+														
+														<li>&ndash;
+															<span class="name">depth</span>
+															<span class="descr">How many edge hops away this node is from the root nodes.</span>
+														</li>
+														
+													</ul>
+													
+												</li>
+											
+												<li>
+													<span class="name">directed</span>
+													<span class="descr">A boolean indicating whether the search should only go along edges from source to target (default true).</span>
+
+													
+												</li>
+											
+										</ul>
+									</div>
+								
+							</div>
+							
+
+							<div class="details">
+								
+									<h3>Details</h3>
+<p>This function has a shorter alias, <code>eles.bfs()</code>.
+
+</p>
+<h3>Examples</h3>
+<pre><code class="lang-js">cy.$(&#39;#j&#39;).bfs(function(i, depth){
+  console.log(&#39;visit &#39; + this.id());
+}, false);</code></pre>
+
+								
+							</div>		
+						</div>
+					
 
 				
 				
@@ -5716,7 +5991,7 @@ n1.trigger(&#39;click&#39;); // click!!</code></pre>
 <p>The extensions API is very simple, following this format:
 
 </p>
-<pre><code class="lang-js">cytoscape( type, name, extension );</code></pre>
+<pre><code>cytoscape( type, name, extension );</code></pre>
 <p>The value of <code>type</code> can take on the following values:
 
 </p>
@@ -5744,6 +6019,10 @@ n1.trigger(&#39;click&#39;); // click!!</code></pre>
   }
 
   return this; // chainability
+});
+
+cy.elements().forEach(function(){
+  console.log( &#39;forEach &#39; + this.id() );
 });</code></pre>
 <h2 id="extensions/layouts">Layouts <a href="#extensions/layouts"><span class="icon-bookmark"></span></a></h2>
 <p>A layout modifies the positions of nodes in the graph.  A layout has number of options, which are specific to the particular layout.
@@ -5800,6 +6079,17 @@ n1.trigger(&#39;click&#39;); // click!!</code></pre>
 			<p><span class="icon-sign-blank"></span></p>
 
 		</div>
+
+		<script>
+			(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+			(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+			m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+			})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+			ga('create', 'UA-155159-11', 'cytoscape.github.io');
+			ga('send', 'pageview');
+
+		</script>
 
 	</body>
 </html>
