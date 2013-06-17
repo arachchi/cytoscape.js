@@ -1,18 +1,18 @@
-.cytoscape-navigationPanel{
+.cytoscape-navigator{
 	position: absolute;
 	border: 1px solid #000;
 	background: #ccc;
 	z-index: 99999;
 }
 
-.cytoscape-navigationThumbnail{
+.cytoscape-navigatorThumbnail{
 	position: absolute;
 	top: 0;
 	left: 0;
 	background: #fff;
 }
 
-.cytoscape-navigationView{
+.cytoscape-navigatorView{
 	position: absolute;
 	top: 0;
 	left: 0;

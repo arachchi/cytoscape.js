@@ -24,7 +24,7 @@ module.exports = function(grunt) {
           "Raphael": true
         }
       },
-      all: ['src/plugins/jquery.cytoscape-navigationpanel.js']
+      all: ['src/plugins/jquery.cytoscape-navigator.js']
     }
   });
 
