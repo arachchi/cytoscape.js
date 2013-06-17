@@ -1,6 +1,6 @@
-;(function($){
+!(function($){
 
-	"use strict"; // jshint ;_;
+	"use strict";
 
 	var NavigationPanel = function ( element, options ) {
 		this.init(element, options);
@@ -86,7 +86,7 @@
 
 	, initView: function () {
 			var that = this
-				, cy = this.$element.cytoscape('get')
+				// , cy = this.$element.cytoscape('get')
 				;
 
 			this.$view = $('<div class="cytoscape-navigationView"/>');
@@ -183,7 +183,7 @@
 
 	, moveCy: function () {
 			var that = this
-				,	position = {
+				, position = {
 						left: parseFloat(that.$view.css('left'))
 					, top: parseFloat(that.$view.css('top'))
 					}
@@ -215,9 +215,13 @@
 				, data = $this.data('navigationPanel')
 				, options = typeof option == 'object' && option
 				;
-			if ( !data ) $this.data('navigationPanel', (data = new NavigationPanel(this, options)));
+			if (!data) {
+				$this.data('navigationPanel', (data = new NavigationPanel(this, options)));
+			}
 			// TODO add handling of more function arguments
-			if ( typeof option == 'string' ) data[option]();
+			if (typeof option == 'string') {
+				data[option]();
+			}
 		})
 	}
 
