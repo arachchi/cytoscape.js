@@ -283,6 +283,9 @@ $(function(){
 				, size: {
 						height: 300
 					}
+				, view: {
+						borderWidth: 1
+					}
 				, live: false
 				});
 			});

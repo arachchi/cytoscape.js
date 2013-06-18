@@ -240,7 +240,7 @@
 		, height: 150 // can be a number (will be used as px), a string which contains a number +px or +%. Percent will be computed based on container size.
 		}
 	, view: {
-			borderWidth: 1
+			borderWidth: 0
 		}
 	, live: true // if true than cy is moved when dragging, otherwise it will be done when dragging was finished
 	};
