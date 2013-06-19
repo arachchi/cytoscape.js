@@ -11,9 +11,27 @@
 		constructor: Navigator
 
 	, init: function ( element, options ) {
+			var that = this
+
 			this.$element = $(element)
 			this.options = $.extend(true, {}, $.fn.cytoscapeNavigator.defaults, options)
+
+			// Panel
 			this.initPanel()
+			this.setPanel()
+
+			// Thumbnail
+			this.initThumbnail()
+			this.setThumbnail()
+
+			// View
+			this.initView()
+			this.setView()
+			// Hook cy zoom
+			this.$element.cytoscape('get').on('zoom pan', function () {
+				that.setView()
+			})
+			// TODO hook cy move/pan
 		}
 
 	, destroy: function () {
@@ -47,22 +65,27 @@
 				this.$panel = $('<div class="'+options.className+'"/>')
 				this.$element.append(this.$panel)
 			}
+		}
+
+	, setPanel: function () {
+			var options = this.options
 
 			// TODO accept all described options
-			// TODO move to other function
 			this.$panel.width(options.size.width)
 			this.$panel.height(options.size.height)
 			this.$panel.css({top: options.position.vertical, left: options.position.horizontal})
-
-			this.initThumbnail()
 		}
 
 	, initThumbnail: function () {
 			this.$thumbnail = $('<dib class="cytoscape-navigatorThumbnail"/>')
 
+			// Add thumbnail to the dom
+			this.$panel.append(this.$thumbnail)
+		}
+
+	, setThumbnail: function () {
 			var navigatorRatio = 1.0 * this.$panel.width() / this.$panel.height()
 				, navigatorThumbnailRatio = 1.0 * this.$element.width() / this.$element.height()
-				
 
 			if( navigatorRatio > navigatorThumbnailRatio ) {
 				// panel width is bigger than thumbnail width
@@ -77,23 +100,17 @@
 			}
 
 			// TODO Populate thumbnail with a render of graph
-
-			// Add thumbnail to the dom
-			this.$panel.append(this.$thumbnail)
-
-			this.initView()
 		}
 
 	, initView: function () {
 			var that = this
 				// , cy = this.$element.cytoscape('get')
-				
 
 			this.$view = $('<div class="cytoscape-navigatorView"/>')
 			this.$thumbnail.append(this.$view)
 
 			// Make navigator view draggable
-			// TODO get rid of jQuery UI 
+			// TODO get rid of jQuery UI
 			this.$view.draggable({
 				containment: this.$thumbnail
 			, scroll: false
@@ -111,19 +128,10 @@
 				}
 			})
 
-			// TODO find a way to stop propadation of mousemove. May be achived by replacing jQuery UI
+			// TODO find a way to stop propagation of mousemove. May be achived by replacing jQuery UI
 			this.$view.on('click.navigator mousedown.navigator touchstart.navigator ', function (ev) {
 				ev.stopPropagation()
 			})
-
-			// Set default navigaion view size
-			this.setView()
-
-			// Hook cy zoom
-			this.$element.cytoscape('get').on('zoom pan', function () {
-				that.setView()
-			})
-			// TODO hook cy move/pan
 		}
 
 	, setView: function () {
@@ -143,7 +151,6 @@
 				, elementHeight = this.$element.height()
 				, cyWidth = elementWidth * cyZoom
 				, cyHeight = elementHeight * cyZoom
-				
 
 			if( cyPan.x > elementWidth || cyPan.x < -cyWidth || cyPan.y > elementHeight || cyPan.y < -cyHeight) {
 				visible = false
@@ -201,7 +208,6 @@
 				, elementHeight = this.$element.height()
 				, cyWidth = elementWidth * cyZoom
 				, cyHeight = elementHeight * cyZoom
-				
 
 			cyPanNew.x = -position.left * cyWidth / thumbnailWidth
 			cyPanNew.y = -position.top * cyHeight / thumbnailHeight
@@ -216,7 +222,7 @@
 			var $this = $(this)
 				, data = $this.data('navigator')
 				, options = typeof option == 'object' && option
-				
+
 			if (!data) {
 				$this.data('navigator', (data = new Navigator(this, options)))
 			}
