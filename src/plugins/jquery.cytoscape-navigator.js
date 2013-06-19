@@ -232,12 +232,12 @@
 	, forceClassName: true
 	, className: 'cytoscape-navigator'
 	, position: {
-			vertical: 450 // can be 'top', 'bottom', 'middle', a number (will be used as px), a string which contains a number +px or +%. Percent will be computed based on container size.
-		, horizontal: 400 // can be 'left', 'right', 'center', a number (will be used as px), a string which contains a number +px or +%. Percent will be computed based on container size.
+			vertical: 450 // can be 'top', 'bottom', 'middle', a number (will be used as px), a function (which returns a number) or a string which contains a number +px or +%. Percent will be computed based on container size.
+		, horizontal: 400 // can be 'left', 'right', 'center', a number (will be used as px), a function (which returns a number) or a string which contains a number +px or +%. Percent will be computed based on container size.
 		}
 	, size: {
-			width: 200 // can be a number (will be used as px), a string which contains a number +px or +%. Percent will be computed based on container size.
-		, height: 150 // can be a number (will be used as px), a string which contains a number +px or +%. Percent will be computed based on container size.
+			width: 200 // can be a number (will be used as px), a function (which returns a number) or a string which contains a number +px or +%. Percent will be computed based on container size.
+		, height: 150 // can be a number (will be used as px), a function (which returns a number) or a string which contains a number +px or +%. Percent will be computed based on container size.
 		}
 	, view: {
 			borderWidth: 0
