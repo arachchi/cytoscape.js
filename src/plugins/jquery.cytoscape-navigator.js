@@ -99,7 +99,7 @@
 				this.$thumbnail.css({top: (this.$panel.height() - this.$thumbnail.width())/2})
 			}
 
-			// TODO Populate thumbnail with a render of graph
+			// TODO Populate thumbnail with a render of the graph
 		}
 
 	, initView: function () {
@@ -117,7 +117,7 @@
 			, start: function () {}
 			, drag: function () {
 					if( that.options.live ) {
-						// TODO move only when cy fineshed previous rendering
+						// TODO move only when cy finished previous rendering
 						that.moveCy()
 					}
 				}
@@ -128,7 +128,7 @@
 				}
 			})
 
-			// TODO find a way to stop propagation of mousemove. May be achived by replacing jQuery UI
+			// TODO find a way to stop propagation of mousemove. May be achieved by replacing jQuery UI
 			this.$view.on('click.navigator mousedown.navigator touchstart.navigator ', function (ev) {
 				ev.stopPropagation()
 			})
@@ -143,7 +143,7 @@
 				, borderDouble = this.options.view.borderWidth * 2
 				, thumbnailWidth = this.$thumbnail.width() - borderDouble
 				, thumbnailHeight = this.$thumbnail.height() - borderDouble
-				// cy wieport sizes
+				// cy vieport sizes
 				, cy = this.$element.cytoscape('get')
 				, cyZoom = cy.zoom()
 				, cyPan = cy.pan()
@@ -200,7 +200,7 @@
 				, borderDouble = this.options.view.borderWidth * 2
 				, thumbnailWidth = this.$thumbnail.width() - borderDouble
 				, thumbnailHeight = this.$thumbnail.height() - borderDouble
-				// cy wieport sizes
+				// cy vieport sizes
 				, cy = this.$element.cytoscape('get')
 				, cyZoom = cy.zoom()
 				, cyPanNew = {x: 0, y: 0}
