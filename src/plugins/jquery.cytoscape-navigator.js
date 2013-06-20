@@ -70,10 +70,46 @@
 	, setPanel: function () {
 			var options = this.options
 
+			// Cache sizes
+			this.options._width = this.convertSizeToNumber(options.size.width, this.$element.width())
+			this.options._height = this.convertSizeToNumber(options.size.height, this.$element.height())
+
+			// Set sizes
+			this.$panel.width(this.options._width)
+			this.$panel.height(this.options._height)
+
 			// TODO accept all described options
-			this.$panel.width(options.size.width)
-			this.$panel.height(options.size.height)
 			this.$panel.css({top: options.position.vertical, left: options.position.horizontal})
+		}
+
+		// reference is used when computing from %
+	, convertSizeToNumber: function (size, reference) {
+			// if function
+			if (Object.prototype.toString.call(size) === '[object Function]') {
+				return this.convertSizeToNumber(size())
+			}
+			// if string
+			else if(Object.prototype.toString.call(size) == '[object String]') {
+				if (~size.indexOf("%")) {
+					return this.convertSizeToNumber(parseFloat(size.substr(0, size.indexOf("%"))) * reference / 100)
+				} else {
+					return this.convertSizeToNumber(parseInt(size, 10))
+				}
+			}
+			// if number
+			else if(!isNaN(parseInt(size, 10)) && isFinite(size)) {
+				if (parseInt(size, 10) < 0) {
+					$.error("The size shouldn't be negative")
+					return 0
+				} else {
+					return parseInt(size, 10)
+				}
+			}
+			// error
+			else {
+				$.error("The size " + size + " can't be converted to a usable number")
+				return 0
+			}
 		}
 
 	, initThumbnail: function () {
