@@ -277,8 +277,8 @@ $(function(){
 					container: "#cytoscape2Navigator"
 				, forceClassName: false
 				, position: {
-						horizontal: 600
-					, vertical: 0
+						horizontal: function(){return $container2.width()}
+					, vertical: 'top'
 					}
 				, size: {
 						height: "45%"
