@@ -1,7 +1,7 @@
 $(function(){
-				
+
 	var height, width;
-	
+
 	var defaultSty = window.defaultSty = cytoscape.stylesheet()
 			.selector("node")
 				.css({
@@ -59,7 +59,7 @@ $(function(){
 					"width": 15,
 					"height": 15
 				});
-	
+
 	window.options = {
 		renderer: {
 			name: "canvas"
@@ -68,11 +68,11 @@ $(function(){
 			name: "grid"
 		},
 		style: defaultSty,
-		
+
 		elements: {
 			nodes: [
-			], 
-			
+			],
+
 			edges: [
 			]
 		},
@@ -83,11 +83,11 @@ $(function(){
 			window.$$ = cytoscape;
 		}
 	};
-	
+
 	var cliques = 2;
 	var numNodes = 32;
 	var numEdges = 64;
-	
+
 	function randNodeId( clique ){
 		var min = numNodes * clique / cliques;
 		var max = numNodes * (clique + 1) / cliques - (cliques == 1 ? 0 : 1);
@@ -96,7 +96,7 @@ $(function(){
 
 		return id;
 	}
-	
+
 	for(var i = 0; i < numNodes; i++){
 		options.elements.nodes.push({
 			data: {
@@ -105,7 +105,7 @@ $(function(){
 			}
 		});
 	}
-	
+
 	var j = 0;
 	for(var clique = 0; clique < cliques; clique++){
 		for(var i = 0; i < numEdges/cliques; i++){
@@ -122,19 +122,19 @@ $(function(){
 			});
 		}
 	}
-	
+
 	var $container = $("#cytoscape");
 	var $container2 = $("#cytoscape2");
-	
+
 	$container.cy(options).cy(function(){
-		
+
 		height = $container.height();
 		width = $container.width();
-		
+
 		$container.cytoscapePanzoom();
 
 		$container.cytoscapeNavigator();
-		
+
 		$container.cytoscapeEdgehandles({
 			lineType: "straight",
 			preview: true,
@@ -178,30 +178,30 @@ $(function(){
 
 			]
 		});
-		
+
 		function number(group){
 			var input = $("#" + group + "-number");
 			var val = parseInt( input.val() );
-			
+
 			if( isNaN(val) ){
 				return 0;
 			}
-			
+
 			return val;
 		}
-		
+
 		function time(callback){
 			var start = new Date();
 			callback();
 			var end = new Date();
-			
+
 			$("#add-remove-time").html( (end - start) + " ms" );
 		}
-		
+
 		$("#add-elements-button").click(function(){
 			var n = number("nodes");
 			var e = number("edges");
-			
+
 			var nodes = [];
 			for(var i = 0; i < n; i++){
 				nodes.push({
@@ -211,21 +211,21 @@ $(function(){
 				});
 			}
 			numNodes += n;
-			
+
 			cy.add(nodes);
-			
+
 			var nodesCollection = cy.nodes();
 			function nodeId(){
 				var index = Math.round((nodesCollection.size() - 1) * Math.random());
 				return nodesCollection.eq(index).data("id");
 			}
-			
+
 			var edges = [];
 			for(var i = 0; i < e; i++){
 				edges.push({
 					group: "edges",
 					data: {
-						id: "e" + (i + numEdges), 
+						id: "e" + (i + numEdges),
 						weight: Math.round( Math.random() * 100 ),
 						source: nodeId(),
 						target: nodeId()
@@ -233,7 +233,7 @@ $(function(){
 				});
 			}
 			numEdges += e;
-			
+
 			time(function(){
 				cy.add(edges);
 			});
@@ -281,7 +281,8 @@ $(function(){
 					, vertical: 0
 					}
 				, size: {
-						height: 300
+						height: "45%"
+					, width: function(){return 200;}
 					}
 				, view: {
 						borderWidth: 1
@@ -290,19 +291,19 @@ $(function(){
 				});
 			});
 
-		
+
 		$("#remove-elements-button").click(function(){
 			var n = number("nodes");
 			var e = number("edges");
-			
+
 			time(function(){
 				cy.nodes().slice(0, n).remove();
 				cy.edges().slice(0, e).remove();
 			});
-			
+
 
 		});
-		
+
 		$("#remove-selected-button").click(function(){
 			cy.elements(":selected").remove();
 		});
@@ -351,8 +352,8 @@ $(function(){
 
 		});
 	});
-	
 
 
-	
+
+
 });
