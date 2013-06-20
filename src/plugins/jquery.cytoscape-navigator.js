@@ -71,15 +71,33 @@
 			var options = this.options
 
 			// Cache sizes
-			this.options._width = this.convertSizeToNumber(options.size.width, this.$element.width())
-			this.options._height = this.convertSizeToNumber(options.size.height, this.$element.height())
+			options.size._width = this.convertSizeToNumber(options.size.width, this.$element.width())
+			options.size._height = this.convertSizeToNumber(options.size.height, this.$element.height())
 
 			// Set sizes
-			this.$panel.width(this.options._width)
-			this.$panel.height(this.options._height)
+			this.$panel.width(options.size._width)
+			this.$panel.height(options.size._height)
 
-			// TODO accept all described options
-			this.$panel.css({top: options.position.vertical, left: options.position.horizontal})
+			// Cache position
+			options.position._horizontal = this.convertPositionToNumber(options.position.horizontal, this.$element.width(), options.size._width)
+			options.position._vertical = this.convertPositionToNumber(options.position.vertical, this.$element.height(), options.size._height)
+
+			// Set positions
+			this.$panel.css({left: options.position._horizontal, top: options.position._vertical})
+		}
+
+		// reference is used when computing from %
+		// element_size is used for string positions (center, right)
+	, convertPositionToNumber: function (position, reference, element_size) {
+			if (position == "top" || position == "left") {
+				return 0
+			} else if (position == "bottom" || position == "right") {
+				return reference - element_size
+			} else if (position == "middle" || position == "center") {
+				return ~~((reference - element_size)/2)
+			} else {
+				return this.convertSizeToNumber(position, reference)
+			}
 		}
 
 		// reference is used when computing from %
