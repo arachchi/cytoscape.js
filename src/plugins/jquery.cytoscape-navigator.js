@@ -27,11 +27,11 @@
 			// View
 			this.initView()
 			this.setupView()
-			// Hook cy zoom
+
+			// Hook cy zoom and pan
 			this.$element.cytoscape('get').on('zoom pan', function () {
 				that.setupView()
 			})
-			// TODO hook cy move/pan
 
 			this.hookResize()
 		}
