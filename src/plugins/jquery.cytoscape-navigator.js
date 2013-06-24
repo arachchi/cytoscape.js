@@ -77,6 +77,32 @@
 				this.$panel = $('<div class="'+options.className+'"/>')
 				this.$element.append(this.$panel)
 			}
+
+			var events = [
+			// Mouse events
+				'mousedown'
+			, 'mouseup'
+			, 'click'
+			, 'mouseover'
+			, 'mouseout'
+			, 'mousemove'
+			// Touch events
+			, 'touchstart'
+			, 'touchmove'
+			, 'touchend'
+			]
+
+			// Stop events propagation
+			this.$panel.on(events.join(' '), function (ev) {
+				if (ev.stopPropagation) {
+					ev.stopPropagation()
+				}
+				// otherwise set the cancelBubble property of the original event to true (IE)
+				ev.cancelBubble = true;
+
+				// TODO delegate event handling
+				// console.log(ev)
+			})
 		}
 
 	, setupPanel: function () {
@@ -177,7 +203,7 @@
 
 			// Make navigator view draggable
 			// TODO get rid of jQuery UI
-			this.$view.draggable({
+/*			this.$view.draggable({
 				containment: this.$thumbnail
 			, scroll: false
 			, start: function () {}
@@ -192,12 +218,8 @@
 						that.moveCy()
 					}
 				}
-			})
+			})*/
 
-			// TODO find a way to stop propagation of mousemove. May be achieved by replacing jQuery UI
-			this.$view.on('click.navigator mousedown.navigator touchstart.navigator ', function (ev) {
-				ev.stopPropagation()
-			})
 		}
 
 	, setupView: function () {
