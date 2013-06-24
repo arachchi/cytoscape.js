@@ -18,18 +18,18 @@
 
 			// Panel
 			this.initPanel()
-			this.setPanel()
+			this.setupPanel()
 
 			// Thumbnail
 			this.initThumbnail()
-			this.setThumbnail()
+			this.setupThumbnail()
 
 			// View
 			this.initView()
-			this.setView()
+			this.setupView()
 			// Hook cy zoom
 			this.$element.cytoscape('get').on('zoom pan', function () {
-				that.setView()
+				that.setupView()
 			})
 			// TODO hook cy move/pan
 
@@ -45,9 +45,9 @@
 		}
 
 	, resize: function () {
-			this.setPanel()
-			this.setThumbnail()
-			this.setView()
+			this.setupPanel()
+			this.setupThumbnail()
+			this.setupView()
 		}
 
 	, initPanel: function () {
@@ -79,7 +79,7 @@
 			}
 		}
 
-	, setPanel: function () {
+	, setupPanel: function () {
 			var options = this.options
 
 			// Cache sizes
@@ -149,7 +149,7 @@
 			this.$panel.append(this.$thumbnail)
 		}
 
-	, setThumbnail: function () {
+	, setupThumbnail: function () {
 			var navigatorRatio = 1.0 * this.$panel.width() / this.$panel.height()
 				, navigatorThumbnailRatio = 1.0 * this.$element.width() / this.$element.height()
 
@@ -200,7 +200,7 @@
 			})
 		}
 
-	, setView: function () {
+	, setupView: function () {
 			var width = 0
 				, height = 0
 				, position = {left: 0, top: 0}
