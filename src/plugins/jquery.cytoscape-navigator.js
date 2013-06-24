@@ -32,10 +32,22 @@
 				that.setView()
 			})
 			// TODO hook cy move/pan
+
+			this.hookResize()
 		}
 
 	, destroy: function () {
 			this.$element.remove()
+		}
+
+	, hookResize: function () {
+			this.$element.on('resize', $.proxy(this.resize, this))
+		}
+
+	, resize: function () {
+			this.setPanel()
+			this.setThumbnail()
+			this.setView()
 		}
 
 	, initPanel: function () {
