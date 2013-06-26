@@ -151,26 +151,6 @@
 
 			this.$view = $('<div class="cytoscape-navigatorView"/>')
 			this.$thumbnail.append(this.$view)
-
-			// Make navigator view draggable
-			// TODO get rid of jQuery UI
-/*			this.$view.draggable({
-				containment: this.$thumbnail
-			, scroll: false
-			, start: function () {}
-			, drag: function () {
-					if( that.options.live ) {
-						// TODO move only when cy finished previous rendering
-						that.moveCy()
-					}
-				}
-			, stop: function () {
-					if( !that.options.live ) {
-						that.moveCy()
-					}
-				}
-			})*/
-
 		}
 
 	, setupView: function () {
