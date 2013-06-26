@@ -10,6 +10,10 @@
 
 		constructor: Navigator
 
+	/****************************
+		Main functions
+	****************************/
+
 	, init: function ( element, options ) {
 			var that = this
 
@@ -40,15 +44,9 @@
 			this.$element.remove()
 		}
 
-	, hookResize: function () {
-			this.$element.on('resize', $.proxy(this.resize, this))
-		}
-
-	, resize: function () {
-			this.setupPanel()
-			this.setupThumbnail()
-			this.setupView()
-		}
+	/****************************
+		Navigator elements functions
+	****************************/
 
 	, initPanel: function () {
 			var options = this.options
@@ -78,31 +76,7 @@
 				this.$element.append(this.$panel)
 			}
 
-			var events = [
-			// Mouse events
-				'mousedown'
-			, 'mouseup'
-			, 'click'
-			, 'mouseover'
-			, 'mouseout'
-			, 'mousemove'
-			// Touch events
-			, 'touchstart'
-			, 'touchmove'
-			, 'touchend'
-			]
-
-			// Stop events propagation
-			this.$panel.on(events.join(' '), function (ev) {
-				if (ev.stopPropagation) {
-					ev.stopPropagation()
-				}
-				// otherwise set the cancelBubble property of the original event to true (IE)
-				ev.cancelBubble = true;
-
-				// TODO delegate event handling
-				// console.log(ev)
-			})
+			this.initEventsHandling()
 		}
 
 	, setupPanel: function () {
@@ -122,50 +96,6 @@
 
 			// Set positions
 			this.$panel.css({left: options.position._horizontal, top: options.position._vertical})
-		}
-
-		// reference is used when computing from %
-		// element_size is used for string positions (center, right)
-	, convertPositionToNumber: function (position, reference, element_size) {
-			if (position == "top" || position == "left") {
-				return 0
-			} else if (position == "bottom" || position == "right") {
-				return reference - element_size
-			} else if (position == "middle" || position == "center") {
-				return ~~((reference - element_size)/2)
-			} else {
-				return this.convertSizeToNumber(position, reference)
-			}
-		}
-
-		// reference is used when computing from %
-	, convertSizeToNumber: function (size, reference) {
-			// if function
-			if (Object.prototype.toString.call(size) === '[object Function]') {
-				return this.convertSizeToNumber(size())
-			}
-			// if string
-			else if(Object.prototype.toString.call(size) == '[object String]') {
-				if (~size.indexOf("%")) {
-					return this.convertSizeToNumber(parseFloat(size.substr(0, size.indexOf("%"))) * reference / 100)
-				} else {
-					return this.convertSizeToNumber(parseInt(size, 10))
-				}
-			}
-			// if number
-			else if(!isNaN(parseInt(size, 10)) && isFinite(size)) {
-				if (parseInt(size, 10) < 0) {
-					$.error("The size shouldn't be negative")
-					return 0
-				} else {
-					return parseInt(size, 10)
-				}
-			}
-			// error
-			else {
-				$.error("The size " + size + " can't be converted to a usable number")
-				return 0
-			}
 		}
 
 	, initThumbnail: function () {
@@ -277,6 +207,121 @@
 			}
 
 		}
+
+	/****************************
+		Convertor functions
+	****************************/
+
+		// reference is used when computing from %
+		// element_size is used for string positions (center, right)
+	, convertPositionToNumber: function (position, reference, element_size) {
+			if (position == "top" || position == "left") {
+				return 0
+			} else if (position == "bottom" || position == "right") {
+				return reference - element_size
+			} else if (position == "middle" || position == "center") {
+				return ~~((reference - element_size)/2)
+			} else {
+				return this.convertSizeToNumber(position, reference)
+			}
+		}
+
+		// reference is used when computing from %
+	, convertSizeToNumber: function (size, reference) {
+			// if function
+			if (Object.prototype.toString.call(size) === '[object Function]') {
+				return this.convertSizeToNumber(size())
+			}
+			// if string
+			else if(Object.prototype.toString.call(size) == '[object String]') {
+				if (~size.indexOf("%")) {
+					return this.convertSizeToNumber(parseFloat(size.substr(0, size.indexOf("%"))) * reference / 100)
+				} else {
+					return this.convertSizeToNumber(parseInt(size, 10))
+				}
+			}
+			// if number
+			else if(!isNaN(parseInt(size, 10)) && isFinite(size)) {
+				if (parseInt(size, 10) < 0) {
+					$.error("The size shouldn't be negative")
+					return 0
+				} else {
+					return parseInt(size, 10)
+				}
+			}
+			// error
+			else {
+				$.error("The size " + size + " can't be converted to a usable number")
+				return 0
+			}
+		}
+
+	/****************************
+		Event handling functions
+	****************************/
+
+	, hookResize: function () {
+			this.$element.on('resize', $.proxy(this.resize, this))
+		}
+
+	, resize: function () {
+			this.setupPanel()
+			this.setupThumbnail()
+			this.setupView()
+		}
+
+	, initEventsHandling: function () {
+			var that = this
+				, events = [
+				// Mouse events
+					'mousedown'
+				, 'mouseup'
+				// , 'click'
+				, 'mouseover'
+				, 'mouseout'
+				, 'mousemove'
+				// Touch events
+				, 'touchstart'
+				, 'touchmove'
+				, 'touchend'
+				]
+
+			// handle events and stop their propagation
+			this.$panel.on(events.join(' '), function (ev) {
+				if (ev.stopPropagation) {
+					ev.stopPropagation()
+				}
+				// otherwise set the cancelBubble property of the original event to true (IE)
+				ev.cancelBubble = true;
+
+				// Delegate event handling
+				if (ev.type == 'mousedown' || ev.type == 'touchstart') {
+					that.eventMoveStart(ev)
+				} else if (ev.type == 'mousemove' || ev.type == 'touchmove') {
+					that.eventMove(ev)
+				} else if (ev.type == 'mouseup' || ev.type == 'touchend') {
+					that.eventMoveEnd(ev)
+				} else if (ev.type == 'mouseover' || ev.type == 'mouseout') {
+					// console.log(ev)
+				}
+			})
+		}
+
+	, eventMoveStart: function (ev) {
+			// body...
+		}
+
+	, eventMove: function (ev) {
+			// body...
+		}
+
+	, eventMoveEnd: function (ev) {
+			// body...
+		}
+
+	/****************************
+		Navigator view moving
+	****************************/
 
 	, moveCy: function () {
 			var that = this
