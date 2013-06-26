@@ -20,6 +20,10 @@
 			this.$element = $(element)
 			this.options = $.extend(true, {}, $.fn.cytoscapeNavigator.defaults, options)
 
+			// Cache sizes
+      this.width = this.$element.width()
+      this.height = this.$element.height()
+
 			// Panel
 			this.initPanel()
 			this.setupPanel()
@@ -83,16 +87,16 @@
 			var options = this.options
 
 			// Cache sizes
-			options.size._width = this.convertSizeToNumber(options.size.width, this.$element.width())
-			options.size._height = this.convertSizeToNumber(options.size.height, this.$element.height())
+			options.size._width = this.convertSizeToNumber(options.size.width, this.width)
+			options.size._height = this.convertSizeToNumber(options.size.height, this.height)
 
 			// Set sizes
 			this.$panel.width(options.size._width)
 			this.$panel.height(options.size._height)
 
 			// Cache position
-			options.position._horizontal = this.convertPositionToNumber(options.position.horizontal, this.$element.width(), options.size._width)
-			options.position._vertical = this.convertPositionToNumber(options.position.vertical, this.$element.height(), options.size._height)
+			options.position._horizontal = this.convertPositionToNumber(options.position.horizontal, this.width, options.size._width)
+			options.position._vertical = this.convertPositionToNumber(options.position.vertical, this.height, options.size._height)
 
 			// Set positions
 			this.$panel.css({left: options.position._horizontal, top: options.position._vertical})
@@ -110,7 +114,7 @@
 
 	, setupThumbnail: function () {
 			var navigatorRatio = 1.0 * this.$panel.width() / this.$panel.height()
-				, navigatorThumbnailRatio = 1.0 * this.$element.width() / this.$element.height()
+				, navigatorThumbnailRatio = 1.0 * this.width / this.height
 				, _width
 				, _height
 				, _left = 0
@@ -166,12 +170,10 @@
 				, cy = this.$element.cytoscape('get')
 				, cyZoom = cy.zoom()
 				, cyPan = cy.pan()
-				, elementWidth = this.$element.width()
-				, elementHeight = this.$element.height()
-				, cyWidth = elementWidth * cyZoom
-				, cyHeight = elementHeight * cyZoom
+				, cyWidth = this.width * cyZoom
+				, cyHeight = this.height * cyZoom
 
-			if( cyPan.x > elementWidth || cyPan.x < -cyWidth || cyPan.y > elementHeight || cyPan.y < -cyHeight) {
+			if( cyPan.x > this.width || cyPan.x < -cyWidth || cyPan.y > this.height || cyPan.y < -cyHeight) {
 				visible = false
 				this.$view.hide()
 			} else {
@@ -273,6 +275,10 @@
 		}
 
 	, resize: function () {
+			// Cache sizes
+      this.width = this.$element.width()
+      this.height = this.$element.height()
+
 			this.setupPanel()
 			this.setupThumbnail()
 			this.setupView()
@@ -420,10 +426,8 @@
 				, cy = this.$element.cytoscape('get')
 				, cyZoom = cy.zoom()
 				, cyPanNew = {x: 0, y: 0}
-				, elementWidth = this.$element.width()
-				, elementHeight = this.$element.height()
-				, cyWidth = elementWidth * cyZoom
-				, cyHeight = elementHeight * cyZoom
+				, cyWidth = this.width * cyZoom
+				, cyHeight = this.height * cyZoom
 
 			cyPanNew.x = -position.left * cyWidth / thumbnailWidth
 			cyPanNew.y = -position.top * cyHeight / thumbnailHeight
