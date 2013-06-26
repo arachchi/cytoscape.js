@@ -411,29 +411,26 @@
 		Navigator view moving
 	****************************/
 
-	, moveCy: function () {
-			var that = this
-				, _data = this.eventData
-				, position = {
-						left: _data.viewSetup.x
-					, top: _data.viewSetup.y
-					}
-				// thumbnail available sizes
-				, borderDouble = this.options.view.borderWidth * 2
-				, thumbnailWidth = _data.thumbnailSizes.width - borderDouble
-				, thumbnailHeight = _data.thumbnailSizes.height - borderDouble
-				// cy vieport sizes
-				, cy = this.$element.cytoscape('get')
-				, cyZoom = cy.zoom()
-				, cyPanNew = {x: 0, y: 0}
-				, cyWidth = this.width * cyZoom
-				, cyHeight = this.height * cyZoom
+  , moveCy: function () {
+      var that = this
+        , _data = this.eventData
+        , position = {
+            left: _data.viewSetup.x
+          , top: _data.viewSetup.y
+          }
+        // thumbnail available sizes
+        , borderDouble = this.options.view.borderWidth * 2
+        , thumbnailWidth = _data.thumbnailSizes.width - borderDouble
+        , thumbnailHeight = _data.thumbnailSizes.height - borderDouble
+        // cy vieport sizes
+        , cy = this.$element.cytoscape('get')
+        , cyZoom = cy.zoom()
 
-			cyPanNew.x = -position.left * cyWidth / thumbnailWidth
-			cyPanNew.y = -position.top * cyHeight / thumbnailHeight
-
-			cy.pan(cyPanNew)
-		}
+      cy.pan({
+        x: -position.left * this.width * cyZoom / thumbnailWidth
+      , y: -position.top * this.height * cyZoom / thumbnailHeight
+      })
+    }
 
 	}
 
