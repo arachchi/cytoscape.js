@@ -121,6 +121,9 @@
 				this.$thumbnail.css({top: (this.$panel.height() - this.$thumbnail.width())/2})
 			}
 
+			this.eventData.thumbnailSizes.width = this.$thumbnail.width()
+			this.eventData.thumbnailSizes.height = this.$thumbnail.height()
+
 			// TODO Populate thumbnail with a render of the graph
 		}
 
@@ -204,12 +207,19 @@
 
 				// Set computed values
 				this.$view.show().width(width).height(height).css(position)
+
+				// Cache values into eventData
+				// define like this for speed and in order not to erase additional parameters
+				this.eventData.viewSetup.width = width
+				this.eventData.viewSetup.height = height
+				this.eventData.viewSetup.x = position.left
+				this.eventData.viewSetup.y = position.top
 			}
 
 		}
 
 	/****************************
-		Convertor functions
+		Converter functions
 	****************************/
 
 		// reference is used when computing from %
@@ -272,11 +282,10 @@
 
 	, initEventsHandling: function () {
 			var that = this
-				, events = [
+				, eventsAll = [
 				// Mouse events
 					'mousedown'
 				, 'mouseup'
-				// , 'click'
 				, 'mouseover'
 				, 'mouseout'
 				, 'mousemove'
@@ -285,9 +294,40 @@
 				, 'touchmove'
 				, 'touchend'
 				]
+				, eventsGlobal = [
+				// Mouse events
+				  'mouseup'
+				, 'mousemove'
+				// Touch events
+				, 'touchmove'
+				, 'touchend'
+				]
+
+			// Init events data storing
+			this.eventData = {
+				isActive: false
+			, hookPoint: { // relative to View
+					x: 0
+				, y: 0
+				}
+			, mousePositionPrev: { // relative to Thumbnail
+					x: 0
+				, y: 0
+				}
+			, thumbnailSizes: {
+					width: 0
+				, height: 0
+				}
+			, viewSetup: {
+					x: 0
+				, y: 0
+				, width: 0
+				, height: 0
+				}
+			}
 
 			// handle events and stop their propagation
-			this.$panel.on(events.join(' '), function (ev) {
+			this.$panel.on(eventsAll.join(' '), function (ev) {
 				if (ev.stopPropagation) {
 					ev.stopPropagation()
 				}
@@ -305,18 +345,60 @@
 					// console.log(ev)
 				}
 			})
+
+			// Hook move and up/end globally
+			$(window).on(eventsGlobal.join(' '), function (ev) {
+				// Delegate event handling
+				if (ev.type == 'mousemove' || ev.type == 'touchmove') {
+					that.eventMove(ev)
+				} else if (ev.type == 'mouseup' || ev.type == 'touchend') {
+					that.eventMoveEnd(ev)
+				}
+			})
 		}
 
 	, eventMoveStart: function (ev) {
-			// body...
+			var _data = this.eventData
+
+			// if event started in View
+			if (ev.target == this.$view[0]) {
+				_data.isActive = true
+				_data.hookPoint.x = ev.offsetX
+				_data.hookPoint.y = ev.offsetY
+				_data.mousePositionPrev.x = _data.viewSetup.x + ev.offsetX
+				_data.mousePositionPrev.y = _data.viewSetup.y + ev.offsetY
+			}
+			// if event started in Thumbnail (outside of View)
+			else if (ev.target == this.$thumbnail[0]) {
+				// TODO move View into given position
+			}
+
+			// console.log(ev)
 		}
 
 	, eventMove: function (ev) {
-			// body...
+			var _data = this.eventData
+
+			if (_data.isActive === false) {
+				return;
+			}
+
+			//
+			console.log(ev)
 		}
 
 	, eventMoveEnd: function (ev) {
-			// body...
+			var _data = this.eventData
+
+			if (_data.isActive === false) {
+				return;
+			}
+
+			//
+
+			// State
+			_data.isActive = false
+			console.log(ev)
 		}
 
 	/****************************
