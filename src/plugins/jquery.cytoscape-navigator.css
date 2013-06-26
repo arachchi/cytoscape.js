@@ -10,6 +10,14 @@
 	top: 0;
 	left: 0;
 	background: #fff;
+	z-index: 100;
+}
+
+.cytoscape-navigatorThumbnailOverlay{
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 101;
 }
 
 .cytoscape-navigatorView{

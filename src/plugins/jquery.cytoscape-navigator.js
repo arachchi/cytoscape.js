@@ -100,29 +100,47 @@
 
 	, initThumbnail: function () {
 			this.$thumbnail = $('<dib class="cytoscape-navigatorThumbnail"/>')
+			// Used to capture mouse events
+			this.$thumbnailOverlay = $('<dib class="cytoscape-navigatorThumbnailOverlay"/>')
 
 			// Add thumbnail to the dom
 			this.$panel.append(this.$thumbnail)
+			this.$panel.append(this.$thumbnailOverlay)
 		}
 
 	, setupThumbnail: function () {
 			var navigatorRatio = 1.0 * this.$panel.width() / this.$panel.height()
 				, navigatorThumbnailRatio = 1.0 * this.$element.width() / this.$element.height()
+				, _width
+				, _height
+				, _left = 0
+				, _top = 0
 
 			if( navigatorRatio > navigatorThumbnailRatio ) {
 				// panel width is bigger than thumbnail width
-				this.$thumbnail.width(navigatorThumbnailRatio * this.$panel.height())
-				this.$thumbnail.height(this.$panel.height())
-				this.$thumbnail.css({left: (this.$panel.width() - this.$thumbnail.height())/2})
+				_width = navigatorThumbnailRatio * this.$panel.height()
+				_height = this.$panel.height()
+				_left = (this.$panel.width() - _height)/2
 			} else {
 				// panel height is bigger than thumbnail height
-				this.$thumbnail.width(this.$panel.width())
-				this.$thumbnail.height(navigatorThumbnailRatio * this.$panel.width())
-				this.$thumbnail.css({top: (this.$panel.height() - this.$thumbnail.width())/2})
+				_width =  this.$panel.width()
+				_height = navigatorThumbnailRatio * this.$panel.width()
+				_top = (this.$panel.height() - _width)/2
 			}
 
-			this.eventData.thumbnailSizes.width = this.$thumbnail.width()
-			this.eventData.thumbnailSizes.height = this.$thumbnail.height()
+			// Setup Thumbnail
+			this.$thumbnail.width(_width)
+			this.$thumbnail.height(_height)
+			this.$thumbnail.css({left: _left, top: _top})
+
+			// Setup Overlay
+			this.$thumbnailOverlay.width(_width)
+			this.$thumbnailOverlay.height(_height)
+			this.$thumbnailOverlay.css({left: _left, top: _top})
+
+			// Cache Thumbnail sizes
+			this.eventData.thumbnailSizes.width = _width
+			this.eventData.thumbnailSizes.height = _height
 
 			// TODO Populate thumbnail with a render of the graph
 		}
@@ -294,23 +312,11 @@
 				, 'touchmove'
 				, 'touchend'
 				]
-				, eventsGlobal = [
-				// Mouse events
-				  'mouseup'
-				, 'mousemove'
-				// Touch events
-				, 'touchmove'
-				, 'touchend'
-				]
 
 			// Init events data storing
 			this.eventData = {
 				isActive: false
 			, hookPoint: { // relative to View
-					x: 0
-				, y: 0
-				}
-			, mousePositionPrev: { // relative to Thumbnail
 					x: 0
 				, y: 0
 				}
@@ -328,32 +334,22 @@
 
 			// handle events and stop their propagation
 			this.$panel.on(eventsAll.join(' '), function (ev) {
-				if (ev.stopPropagation) {
-					ev.stopPropagation()
+				// Delegate event handling only for Overlay
+				if (ev.target == that.$thumbnailOverlay[0]) {
+					if (ev.type == 'mousedown' || ev.type == 'touchstart') {
+						that.eventMoveStart(ev)
+					} else if (ev.type == 'mousemove' || ev.type == 'touchmove') {
+						that.eventMove(ev)
+					} else if (ev.type == 'mouseup' || ev.type == 'touchend' || ev.type == 'mouseout') {
+						that.eventMoveEnd(ev)
+					} else if (ev.type == 'mouseover') {
+						// console.log(ev)
+					}
 				}
-				// otherwise set the cancelBubble property of the original event to true (IE)
-				ev.cancelBubble = true;
 
-				// Delegate event handling
-				if (ev.type == 'mousedown' || ev.type == 'touchstart') {
-					that.eventMoveStart(ev)
-				} else if (ev.type == 'mousemove' || ev.type == 'touchmove') {
-					that.eventMove(ev)
-				} else if (ev.type == 'mouseup' || ev.type == 'touchend') {
-					that.eventMoveEnd(ev)
-				} else if (ev.type == 'mouseover' || ev.type == 'mouseout') {
-					// console.log(ev)
-				}
-			})
-
-			// Hook move and up/end globally
-			$(window).on(eventsGlobal.join(' '), function (ev) {
-				// Delegate event handling
-				if (ev.type == 'mousemove' || ev.type == 'touchmove') {
-					that.eventMove(ev)
-				} else if (ev.type == 'mouseup' || ev.type == 'touchend') {
-					that.eventMoveEnd(ev)
-				}
+				// Prevent default and propagation
+				// Don't use peventPropagation as it cancels sometimes moure handler
+				return false;
 			})
 		}
 
@@ -361,30 +357,49 @@
 			var _data = this.eventData
 
 			// if event started in View
-			if (ev.target == this.$view[0]) {
+			if (ev.offsetX >= _data.viewSetup.x && ev.offsetX <= _data.viewSetup.x + _data.viewSetup.width
+				&& ev.offsetY >= _data.viewSetup.y && ev.offsetY <= _data.viewSetup.y + _data.viewSetup.height
+			) {
 				_data.isActive = true
-				_data.hookPoint.x = ev.offsetX
-				_data.hookPoint.y = ev.offsetY
-				_data.mousePositionPrev.x = _data.viewSetup.x + ev.offsetX
-				_data.mousePositionPrev.y = _data.viewSetup.y + ev.offsetY
+				_data.hookPoint.x = ev.offsetX - _data.viewSetup.x
+				_data.hookPoint.y = ev.offsetY - _data.viewSetup.y
 			}
 			// if event started in Thumbnail (outside of View)
-			else if (ev.target == this.$thumbnail[0]) {
+			else {
 				// TODO move View into given position
 			}
-
-			// console.log(ev)
 		}
 
 	, eventMove: function (ev) {
 			var _data = this.eventData
+				, _x = 0
+				, _y = 0
 
+			// break if it is useless event
 			if (_data.isActive === false) {
 				return;
 			}
 
-			//
-			console.log(ev)
+			_x = ev.offsetX - _data.hookPoint.x
+			_x = Math.max(0, _x)
+			_x = Math.min(_data.thumbnailSizes.width - _data.viewSetup.width, _x)
+
+			_y = ev.offsetY - _data.hookPoint.y
+			_y = Math.max(0, _y)
+			_y = Math.min(_data.thumbnailSizes.height - _data.viewSetup.height, _y)
+
+			// Update view position
+			this.$view.css('left', _x)
+			this.$view.css('top', _y)
+
+			// Update cache
+			_data.viewSetup.x = _x
+			_data.viewSetup.y = _y
+
+			// Move Cy
+			if (this.options.live) {
+				this.moveCy()
+			}
 		}
 
 	, eventMoveEnd: function (ev) {
@@ -394,11 +409,16 @@
 				return;
 			}
 
-			//
+			// Trigger one last move
+			this.eventMove(ev)
+
+			// If mode is not live then move Cy on drag end
+			if (!this.options.live) {
+				this.moveCy()
+			}
 
 			// State
 			_data.isActive = false
-			console.log(ev)
 		}
 
 	/****************************
@@ -407,14 +427,15 @@
 
 	, moveCy: function () {
 			var that = this
+				, _data = this.eventData
 				, position = {
-						left: parseFloat(that.$view.css('left'))
-					, top: parseFloat(that.$view.css('top'))
+						left: _data.viewSetup.x
+					, top: _data.viewSetup.y
 					}
 				// thumbnail available sizes
 				, borderDouble = this.options.view.borderWidth * 2
-				, thumbnailWidth = this.$thumbnail.width() - borderDouble
-				, thumbnailHeight = this.$thumbnail.height() - borderDouble
+				, thumbnailWidth = _data.thumbnailSizes.width - borderDouble
+				, thumbnailHeight = _data.thumbnailSizes.height - borderDouble
 				// cy vieport sizes
 				, cy = this.$element.cytoscape('get')
 				, cyZoom = cy.zoom()
