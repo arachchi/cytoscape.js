@@ -22,8 +22,8 @@
 			this.cy = this.$element.cytoscape('get')
 
 			// Cache sizes
-      this.width = this.$element.width()
-      this.height = this.$element.height()
+			this.width = this.$element.width()
+			this.height = this.$element.height()
 
 			// Panel
 			this.initPanel()
@@ -275,8 +275,8 @@
 
 	, resize: function () {
 			// Cache sizes
-      this.width = this.$element.width()
-      this.height = this.$element.height()
+			this.width = this.$element.width()
+			this.height = this.$element.height()
 
 			this.setupPanel()
 			this.setupThumbnail()
@@ -435,21 +435,21 @@
 		Navigator view moving
 	****************************/
 
-  , moveCy: function () {
-      var that = this
-        , _data = this.eventData
-        // thumbnail available sizes
-        , thumbnailBorderDouble = this.options.view.borderWidth * 2
-        , thumbnailWidth = _data.thumbnailSizes.width - thumbnailBorderDouble
-        , thumbnailHeight = _data.thumbnailSizes.height - thumbnailBorderDouble
-        // cy vieport zoom
-        , cyZoom = this.cy.zoom()
+	, moveCy: function () {
+			var that = this
+				, _data = this.eventData
+				// thumbnail available sizes
+				, thumbnailBorderDouble = this.options.view.borderWidth * 2
+				, thumbnailWidth = _data.thumbnailSizes.width - thumbnailBorderDouble
+				, thumbnailHeight = _data.thumbnailSizes.height - thumbnailBorderDouble
+				// cy vieport zoom
+				, cyZoom = this.cy.zoom()
 
-      this.cy.pan({
-        x: -_data.viewSetup.x * this.width * cyZoom / thumbnailWidth
-      , y: -_data.viewSetup.y * this.height * cyZoom / thumbnailHeight
-      })
-    }
+			this.cy.pan({
+				x: -_data.viewSetup.x * this.width * cyZoom / thumbnailWidth
+			, y: -_data.viewSetup.y * this.height * cyZoom / thumbnailHeight
+			})
+		}
 
 	, zoomCy: function (zoomIn) {
 			// TODO take in account min/max zoom
