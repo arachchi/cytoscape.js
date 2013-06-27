@@ -19,6 +19,7 @@
 
 			this.$element = $(element)
 			this.options = $.extend(true, {}, $.fn.cytoscapeNavigator.defaults, options)
+			this.cy = this.$element.cytoscape('get')
 
 			// Cache sizes
       this.width = this.$element.width()
@@ -37,7 +38,7 @@
 			this.setupView()
 
 			// Hook cy zoom and pan
-			this.$element.cytoscape('get').on('zoom pan', function () {
+			this.cy.on('zoom pan', function () {
 				that.setupView()
 			})
 
@@ -151,7 +152,6 @@
 
 	, initView: function () {
 			var that = this
-				// , cy = this.$element.cytoscape('get')
 
 			this.$view = $('<div class="cytoscape-navigatorView"/>')
 			this.$thumbnail.append(this.$view)
@@ -167,9 +167,8 @@
 				, thumbnailWidth = this.$thumbnail.width() - borderDouble
 				, thumbnailHeight = this.$thumbnail.height() - borderDouble
 				// cy vieport sizes
-				, cy = this.$element.cytoscape('get')
-				, cyZoom = cy.zoom()
-				, cyPan = cy.pan()
+				, cyZoom = this.cy.zoom()
+				, cyPan = this.cy.pan()
 				, cyWidth = this.width * cyZoom
 				, cyHeight = this.height * cyZoom
 
@@ -422,11 +421,10 @@
         , borderDouble = this.options.view.borderWidth * 2
         , thumbnailWidth = _data.thumbnailSizes.width - borderDouble
         , thumbnailHeight = _data.thumbnailSizes.height - borderDouble
-        // cy vieport sizes
-        , cy = this.$element.cytoscape('get')
-        , cyZoom = cy.zoom()
+        // cy vieport zoom
+        , cyZoom = this.cy.zoom()
 
-      cy.pan({
+      this.cy.pan({
         x: -position.left * this.width * cyZoom / thumbnailWidth
       , y: -position.top * this.height * cyZoom / thumbnailHeight
       })
