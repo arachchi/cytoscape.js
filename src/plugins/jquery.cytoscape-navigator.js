@@ -292,6 +292,7 @@
 				, 'mouseover'
 				, 'mouseout'
 				, 'mousemove'
+				, 'mousewheel'
 				// Touch events
 				, 'touchstart'
 				, 'touchmove'
@@ -328,6 +329,8 @@
 						that.eventMove(ev)
 					} else if (ev.type == 'mouseup' || ev.type == 'touchend' || ev.type == 'mouseout') {
 						that.eventMoveEnd(ev)
+					} else if (ev.type == 'mousewheel') {
+						that.eventZoom(ev)
 					} else if (ev.type == 'mouseover') {
 						// console.log(ev)
 					}
@@ -415,6 +418,14 @@
 			_data.isActive = false
 		}
 
+	, eventZoom: function (ev) {
+			var zoomIn = ev.originalEvent.wheelDelta > 0
+
+			if (this.cy.zoomingEnabled()) {
+				this.zoomCy(zoomIn)
+			}
+		}
+
 	, moveCyClearTimeout: function () {
 			this.moveCy()
 			this.eventData.timeout = null
@@ -439,6 +450,12 @@
       , y: -_data.viewSetup.y * this.height * cyZoom / thumbnailHeight
       })
     }
+
+	, zoomCy: function (zoomIn) {
+			// TODO take in account min/max zoom
+			var zoomDelta = this.options.zoomStep * (zoomIn ? 1 : -1)
+			this.cy.zoom(this.cy.zoom() + zoomDelta)
+		}
 
 	}
 
@@ -477,6 +494,7 @@
 		}
 	, live: true // if true than cy is moved when dragging, otherwise it will be done when dragging was finished
 	, liveFramerate: 0 // max number of graph changing; if is set 0 then the framerate is max
+	, zoomStep: 0.25
 	}
 
 	$.fn.cyNavigator = $.fn.cytoscapeNavigator
