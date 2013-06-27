@@ -315,6 +315,7 @@
 				, width: 0
 				, height: 0
 				}
+			, timeout: null // used to keep stable framerate
 			}
 
 			// handle events and stop their propagation
@@ -356,7 +357,8 @@
 		}
 
 	, eventMove: function (ev) {
-			var _data = this.eventData
+			var that = this
+				, _data = this.eventData
 				, _x = 0
 				, _y = 0
 
@@ -383,7 +385,14 @@
 
 			// Move Cy
 			if (this.options.live) {
-				this.moveCy()
+				// trigger instantly
+				if (this.options.liveFramerate == 0) {
+					this.moveCy()
+				}
+				// trigger only once in time/framerate
+				else if (_data.timeout === null) {
+					_data.timeout = setTimeout($.proxy(this.moveCyClearTimeout, this), 1000/this.options.liveFramerate)
+				}
 			}
 		}
 
@@ -404,6 +413,11 @@
 
 			// State
 			_data.isActive = false
+		}
+
+	, moveCyClearTimeout: function () {
+			this.moveCy()
+			this.eventData.timeout = null
 		}
 
 	/****************************
@@ -462,6 +476,7 @@
 			borderWidth: 0
 		}
 	, live: true // if true than cy is moved when dragging, otherwise it will be done when dragging was finished
+	, liveFramerate: 0 // max number of graph changing; if is set 0 then the framerate is max
 	}
 
 	$.fn.cyNavigator = $.fn.cytoscapeNavigator
