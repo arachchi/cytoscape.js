@@ -452,9 +452,19 @@
 		}
 
 	, zoomCy: function (zoomIn) {
-			// TODO take in account min/max zoom
-			var zoomDelta = this.options.zoomStep * (zoomIn ? 1 : -1)
-			this.cy.zoom(this.cy.zoom() + zoomDelta)
+			var _data = this.eventData
+				, view = _data.viewSetup
+				, scale = 1.0 * this.width / _data.thumbnailSizes.width
+				, zoomDelta = this.options.zoomStep * (zoomIn ? 1 : -1)
+
+			// Zoom about View center
+			this.cy.zoom({
+				level: this.cy.zoom() + zoomDelta
+			, renderedPosition: {
+					x: scale * (view.x + view.width/2)
+				, y: scale * (view.y + view.height/2)
+				}
+			})
 		}
 
 	}
