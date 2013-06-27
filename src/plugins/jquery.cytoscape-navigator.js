@@ -413,20 +413,16 @@
   , moveCy: function () {
       var that = this
         , _data = this.eventData
-        , position = {
-            left: _data.viewSetup.x
-          , top: _data.viewSetup.y
-          }
         // thumbnail available sizes
-        , borderDouble = this.options.view.borderWidth * 2
-        , thumbnailWidth = _data.thumbnailSizes.width - borderDouble
-        , thumbnailHeight = _data.thumbnailSizes.height - borderDouble
+        , thumbnailBorderDouble = this.options.view.borderWidth * 2
+        , thumbnailWidth = _data.thumbnailSizes.width - thumbnailBorderDouble
+        , thumbnailHeight = _data.thumbnailSizes.height - thumbnailBorderDouble
         // cy vieport zoom
         , cyZoom = this.cy.zoom()
 
       this.cy.pan({
-        x: -position.left * this.width * cyZoom / thumbnailWidth
-      , y: -position.top * this.height * cyZoom / thumbnailHeight
+        x: -_data.viewSetup.x * this.width * cyZoom / thumbnailWidth
+      , y: -_data.viewSetup.y * this.height * cyZoom / thumbnailHeight
       })
     }
 
