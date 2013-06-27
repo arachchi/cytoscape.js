@@ -291,6 +291,7 @@ $(function(){
 				});
 			});
 
+		$container2.cytoscape('get').maxZoom(5)
 
 		$("#remove-elements-button").click(function(){
 			var n = number("nodes");
