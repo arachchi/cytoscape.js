@@ -119,7 +119,8 @@
 		}
 
 	, setupThumbnail: function () {
-			var navigatorRatio = 1.0 * this.$panel.width() / this.$panel.height()
+			var that = this
+				, navigatorRatio = 1.0 * this.$panel.width() / this.$panel.height()
 				, navigatorThumbnailRatio = 1.0 * this.width / this.height
 				, _width
 				, _height
@@ -152,7 +153,10 @@
 			this.eventData.thumbnailSizes.width = _width
 			this.eventData.thumbnailSizes.height = _height
 
-			// TODO Populate thumbnail with a render of the graph
+			// Populate thumbnail with a render of the graph
+			setTimeout(function () {
+				that.$thumbnail.find('img')[0].src = that.cy.png()
+			}, 2000)
 		}
 
 	, initView: function () {
