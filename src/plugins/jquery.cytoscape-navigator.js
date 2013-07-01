@@ -105,12 +105,17 @@
 
 	, initThumbnail: function () {
 			this.$thumbnail = $('<dib class="cytoscape-navigatorThumbnail"/>')
+			// Create blank image tag
+			this.$thumbnailImage = $('<img alt=""/>')
 			// Used to capture mouse events
 			this.$thumbnailOverlay = $('<dib class="cytoscape-navigatorThumbnailOverlay"/>')
 
 			// Add thumbnail to the dom
 			this.$panel.append(this.$thumbnail)
+			this.$thumbnail.append(this.$thumbnailImage)
 			this.$panel.append(this.$thumbnailOverlay)
+
+			this.$thumbnailImage.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=='
 		}
 
 	, setupThumbnail: function () {
