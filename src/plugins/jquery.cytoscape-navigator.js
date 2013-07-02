@@ -155,10 +155,8 @@
 
 			// Populate thumbnail with a render of the graph
 			this.cy.on('done', function () {
-				// Call it in the next queue frame
-				setTimeout(function () {
-					that.$thumbnailImage[0].src = that.cy.png()
-				}, 1)
+				that.updateThumbnailImage()
+				that.hookGraphUpdates()
 			})
 		}
 
@@ -441,6 +439,19 @@
 	, moveCyClearTimeout: function () {
 			this.moveCy()
 			this.eventData.timeout = null
+		}
+
+	, hookGraphUpdates: function () {
+			this.cy.on('position add remove data', $.proxy(this.updateThumbnailImage, this))
+		}
+
+	, updateThumbnailImage: function () {
+			var that = this
+
+			// Call it in the next queue frame
+			setTimeout(function(){
+				that.$thumbnailImage[0].src = that.cy.png()
+			})
 		}
 
 	/****************************
