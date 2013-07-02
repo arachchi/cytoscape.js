@@ -350,7 +350,7 @@
 				// Don't use peventPropagation as it cancels sometimes moure handler
 				return false;
 			})
-		}
+			}
 
 	, eventMoveStart: function (ev) {
 			var _data = this.eventData
@@ -442,16 +442,53 @@
 		}
 
 	, hookGraphUpdates: function () {
-			this.cy.on('position add remove data', $.proxy(this.updateThumbnailImage, this))
+			this.cy.on('position add remove data', $.proxy(this.updateThumbnailImage, this, false))
 		}
 
-	, updateThumbnailImage: function () {
+	, updateThumbnailImage: function (force_refresh) {
 			var that = this
+				, timeout = 0 // leave as 0 if force_refresh
+				, pan = this.cy.pan()
+				, zoom = this.cy.zoom()
+
+			// Set thumbnail framerate
+			!force_refresh && this.options.thumbnailFramerate > 0 && (timeout = ~~(1000 / this.options.thumbnailFramerate))
+
+			// Clear old timeout as we are going to create new one
+			if (this.thumbUpdateTimeout !== undefined) {
+				clearTimeout(this.thumbUpdateTimeout)
+			}
 
 			// Call it in the next queue frame
-			setTimeout(function(){
-				that.$thumbnailImage[0].src = that.cy.png()
-			})
+			this.thumbUpdateTimeout = setTimeout(function(){
+				// TODO: Lock
+
+				// If graph is in basic position
+				if (zoom === 1 && pan.x === 0 && pan.y === 0) {
+					that.$thumbnailImage[0].src = that.cy.png()
+				}
+				// If we have to resize graph
+				else{
+					if (zoom !== 1) {
+						that.cy.zoom(1)
+					}
+					if (pan.x !== 0 || pan.y !== 0) {
+						that.cy.pan({x: 0, y: 0})
+					}
+
+					// Call it in the next queue frame
+					setTimeout(function () {
+						that.$thumbnailImage[0].src = that.cy.png()
+
+						if (zoom !== 1) {
+							that.cy.zoom(zoom)
+						}
+						if (pan.x !== 0 || pan.y !== 0) {
+							that.cy.pan(pan)
+						}
+					})
+				}
+			}, timeout)
 		}
 
 	/****************************
@@ -528,6 +565,7 @@
 	, live: true // if true than cy is moved when dragging, otherwise it will be done when dragging was finished
 	, liveFramerate: 0 // max number of graph changing; if is set 0 then the framerate is max
 	, zoomStep: 0.25
+	, thumbnailFramerate: 10
 	}
 
 	$.fn.cyNavigator = $.fn.cytoscapeNavigator
