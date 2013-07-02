@@ -157,7 +157,7 @@
 			this.cy.on('done', function () {
 				// Call it in the next queue frame
 				setTimeout(function () {
-					that.$thumbnail.find('img')[0].src = that.cy.png()
+					that.$thumbnailImage[0].src = that.cy.png()
 				}, 1)
 			})
 		}
