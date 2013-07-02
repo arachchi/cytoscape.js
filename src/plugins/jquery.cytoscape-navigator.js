@@ -154,9 +154,12 @@
 			this.eventData.thumbnailSizes.height = _height
 
 			// Populate thumbnail with a render of the graph
-			setTimeout(function () {
-				that.$thumbnail.find('img')[0].src = that.cy.png()
-			}, 2000)
+			this.cy.on('done', function () {
+				// Call it in the next queue frame
+				setTimeout(function () {
+					that.$thumbnail.find('img')[0].src = that.cy.png()
+				}, 1)
+			})
 		}
 
 	, initView: function () {
