@@ -292,6 +292,7 @@ $(function(){
 			});
 
 		$container2.cytoscape('get').maxZoom(5)
+		$container2.cytoscape('get').minZoom(0.1)
 
 		$("#remove-elements-button").click(function(){
 			var n = number("nodes");
