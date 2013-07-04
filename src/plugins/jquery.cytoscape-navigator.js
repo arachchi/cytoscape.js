@@ -335,20 +335,30 @@
 				// Delegate event handling only for Overlay
 				if (ev.target == that.$thumbnailOverlay[0]) {
 
-					// Normalize offset for browsers which do not provide that value
-					if (ev.type == 'mousedown' || ev.type == 'mousemove' || ev.type == 'mouseup' || ev.type == 'mouseout') {
-						if(typeof ev.offsetX === "undefined" || typeof ev.offsetY === "undefined") {
-							var targetOffset = $(ev.target).offset()
-							ev.offsetX = ev.pageX - targetOffset.left
-							ev.offsetY = ev.pageY - targetOffset.top
-						}
+					// Touch events
+					if (ev.type == 'touchstart') {
+						// Will count as middle of View
+						ev.offsetX = that.eventData.viewSetup.x + that.eventData.viewSetup.width / 2
+						ev.offsetY = that.eventData.viewSetup.y + that.eventData.viewSetup.height / 2
+					} else if (ev.type == 'touchmove') {
+						// Hack - we take in account only first touch
+						ev.pageX = ev.originalEvent.touches[0].pageX
+						ev.pageY = ev.originalEvent.touches[0].pageY
 					}
+
+					// Normalize offset for browsers which do not provide that value
+					if (ev.offsetX === undefined || ev.offsetY === undefined) {
+						var targetOffset = $(ev.target).offset()
+						ev.offsetX = ev.pageX - targetOffset.left
+						ev.offsetY = ev.pageY - targetOffset.top
+					}
+
 
 					if (ev.type == 'mousedown' || ev.type == 'touchstart') {
 						that.eventMoveStart(ev)
 					} else if (ev.type == 'mousemove' || ev.type == 'touchmove') {
 						that.eventMove(ev)
-					} else if (ev.type == 'mouseup' || ev.type == 'touchend' || ev.type == 'mouseout') {
+					} else if (ev.type == 'mouseup' || ev.type == 'mouseout') {
 						that.eventMoveEnd(ev)
 					} else if (ev.type == 'mousewheel' || ev.type == 'DOMMouseScroll') {
 						that.eventZoom(ev)
