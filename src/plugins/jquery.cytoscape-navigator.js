@@ -303,6 +303,7 @@
 				, 'mouseout'
 				, 'mousemove'
 				, 'mousewheel'
+				, 'DOMMouseScroll' // Mozzila specific event
 				// Touch events
 				, 'touchstart'
 				, 'touchmove'
@@ -349,7 +350,7 @@
 						that.eventMove(ev)
 					} else if (ev.type == 'mouseup' || ev.type == 'touchend' || ev.type == 'mouseout') {
 						that.eventMoveEnd(ev)
-					} else if (ev.type == 'mousewheel') {
+					} else if (ev.type == 'mousewheel' || ev.type == 'DOMMouseScroll') {
 						that.eventZoom(ev)
 					} else if (ev.type == 'mouseover') {
 						// console.log(ev)
@@ -439,7 +440,17 @@
 		}
 
 	, eventZoom: function (ev) {
-			var zoomIn = ev.originalEvent.wheelDelta > 0
+			var zoomIn
+
+			if (ev.originalEvent.wheelDelta !== undefined) {
+				zoomIn = ev.originalEvent.wheelDelta > 0
+			}
+			// Mozilla specific event
+			else if (ev.originalEvent.detail !== undefined) {
+				zoomIn = ev.originalEvent.detail > 0
+			} else {
+				return;
+			}
 
 			if (this.cy.zoomingEnabled()) {
 				this.zoomCy(zoomIn)
