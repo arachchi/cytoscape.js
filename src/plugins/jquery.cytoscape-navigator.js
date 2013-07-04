@@ -333,6 +333,16 @@
 			this.$panel.on(eventsAll.join(' '), function (ev) {
 				// Delegate event handling only for Overlay
 				if (ev.target == that.$thumbnailOverlay[0]) {
+
+					// Normalize offset for browsers which do not provide that value
+					if (ev.type == 'mousedown' || ev.type == 'mousemove' || ev.type == 'mouseup' || ev.type == 'mouseout') {
+						if(typeof ev.offsetX === "undefined" || typeof ev.offsetY === "undefined") {
+							var targetOffset = $(ev.target).offset()
+							ev.offsetX = ev.pageX - targetOffset.left
+							ev.offsetY = ev.pageY - targetOffset.top
+						}
+					}
+
 					if (ev.type == 'mousedown' || ev.type == 'touchstart') {
 						that.eventMoveStart(ev)
 					} else if (ev.type == 'mousemove' || ev.type == 'touchmove') {
