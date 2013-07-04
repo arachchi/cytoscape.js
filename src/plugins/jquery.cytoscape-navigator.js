@@ -540,7 +540,7 @@
 
 			// Zoom about View center
 			this.cy.zoom({
-				level: this.cy.zoom() + zoomDelta
+				level: this.cy.zoom() * (1 + zoomDelta)
 			, renderedPosition: {
 					x: scale * (view.x + view.width/2)
 				, y: scale * (view.y + view.height/2)
