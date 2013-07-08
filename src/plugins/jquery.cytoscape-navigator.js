@@ -376,17 +376,23 @@
 	, eventMoveStart: function (ev) {
 			var _data = this.eventData
 
+			_data.isActive = true
+
 			// if event started in View
 			if (ev.offsetX >= _data.viewSetup.x && ev.offsetX <= _data.viewSetup.x + _data.viewSetup.width
 				&& ev.offsetY >= _data.viewSetup.y && ev.offsetY <= _data.viewSetup.y + _data.viewSetup.height
 			) {
-				_data.isActive = true
 				_data.hookPoint.x = ev.offsetX - _data.viewSetup.x
 				_data.hookPoint.y = ev.offsetY - _data.viewSetup.y
 			}
 			// if event started in Thumbnail (outside of View)
 			else {
-				// TODO move View into given position
+				// Set hook point as View center
+				_data.hookPoint.x = _data.viewSetup.width / 2
+				_data.hookPoint.y = _data.viewSetup.height / 2
+
+				// Move View to start point
+				this.eventMove(ev)
 			}
 		}
 
