@@ -573,7 +573,13 @@
 			}
 
 			if (typeof option == 'string') {
-				data[option].call(data, Array.prototype.slice.call(_arguments, 1))
+				if (data[option] === undefined) {
+					$.error("cyNavigator has no such method")
+				} else if (typeof data[option] !== typeof function(){}) {
+					$.error("cyNavigator."+option+" is not a function")
+				} else {
+					data[option].call(data, Array.prototype.slice.call(_arguments, 1))
+				}
 			}
 		})
 	}
