@@ -561,6 +561,8 @@
 	}
 
 	$.fn.cytoscapeNavigator = function ( option ) {
+		var _arguments = arguments
+
 		return this.each(function () {
 			var $this = $(this)
 				, data = $this.data('navigator')
@@ -569,9 +571,9 @@
 			if (!data) {
 				$this.data('navigator', (data = new Navigator(this, options)))
 			}
-			// TODO add handling of more function arguments
+
 			if (typeof option == 'string') {
-				data[option]()
+				data[option].call(data, Array.prototype.slice.call(_arguments, 1))
 			}
 		})
 	}
