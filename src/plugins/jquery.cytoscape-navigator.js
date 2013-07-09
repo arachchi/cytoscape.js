@@ -381,7 +381,6 @@
 			// Check if it was double click
 			if (_data.lastMoveStartTime !== null
 				&& _data.lastMoveStartTime + this.options.dblClickDelay > now) {
-				console.log('dblClick')
 				// Reset lastMoveStartTime
 				_data.lastMoveStartTime = null
 				// Enable View in order to move it to the center
