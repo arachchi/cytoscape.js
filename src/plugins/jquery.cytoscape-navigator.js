@@ -328,6 +328,7 @@
 				, height: 0
 				}
 			, timeout: null // used to keep stable framerate
+			, lastMoveStartTime: null
 			}
 
 			// handle events and stop their propagation
@@ -375,25 +376,55 @@
 
 	, eventMoveStart: function (ev) {
 			var _data = this.eventData
+				, now = new Date().getTime()
 
-			_data.isActive = true
+			// Check if it was double click
+			if (_data.lastMoveStartTime !== null
+				&& _data.lastMoveStartTime + this.options.dblClickDelay > now) {
+				console.log('dblClick')
+				// Reset lastMoveStartTime
+				_data.lastMoveStartTime = null
+				// Enable View in order to move it to the center
+				_data.isActive = true
 
-			// if event started in View
-			if (ev.offsetX >= _data.viewSetup.x && ev.offsetX <= _data.viewSetup.x + _data.viewSetup.width
-				&& ev.offsetY >= _data.viewSetup.y && ev.offsetY <= _data.viewSetup.y + _data.viewSetup.height
-			) {
-				_data.hookPoint.x = ev.offsetX - _data.viewSetup.x
-				_data.hookPoint.y = ev.offsetY - _data.viewSetup.y
-			}
-			// if event started in Thumbnail (outside of View)
-			else {
 				// Set hook point as View center
 				_data.hookPoint.x = _data.viewSetup.width / 2
 				_data.hookPoint.y = _data.viewSetup.height / 2
 
 				// Move View to start point
-				this.eventMove(ev)
+				this.eventMove({
+					offsetX: _data.thumbnailSizes.width / 2
+				, offsetY: _data.thumbnailSizes.height / 2
+				})
+
+				// View should be inactive as we don't want to move it right after double click
+				_data.isActive = false
+
 			}
+			// This is single click
+			// Take care as single click happens before double click 2 times
+			else {
+				_data.lastMoveStartTime = now
+				_data.isActive = true
+
+				// if event started in View
+				if (ev.offsetX >= _data.viewSetup.x && ev.offsetX <= _data.viewSetup.x + _data.viewSetup.width
+					&& ev.offsetY >= _data.viewSetup.y && ev.offsetY <= _data.viewSetup.y + _data.viewSetup.height
+				) {
+					_data.hookPoint.x = ev.offsetX - _data.viewSetup.x
+					_data.hookPoint.y = ev.offsetY - _data.viewSetup.y
+				}
+				// if event started in Thumbnail (outside of View)
+				else {
+					// Set hook point as View center
+					_data.hookPoint.x = _data.viewSetup.width / 2
+					_data.hookPoint.y = _data.viewSetup.height / 2
+
+					// Move View to start point
+					this.eventMove(ev)
+				}
+			}
+
 		}
 
 	, eventMove: function (ev) {
@@ -611,6 +642,7 @@
 	, liveFramerate: 0 // max number of graph changing; if is set 0 then the framerate is max
 	, zoomStep: 0.25
 	, thumbnailFramerate: 10
+	, dblClickDelay: 200
 	}
 
 	$.fn.cyNavigator = $.fn.cytoscapeNavigator
