@@ -106,16 +106,14 @@
 	, initThumbnail: function () {
 			this.$thumbnail = $('<dib class="cytoscape-navigatorThumbnail"/>')
 			// Create blank image tag
-			this.$thumbnailImage = $('<img alt=""/>')
+			this.$thumbnailCanvas = $('<canvas/>')
 			// Used to capture mouse events
 			this.$thumbnailOverlay = $('<dib class="cytoscape-navigatorThumbnailOverlay"/>')
 
 			// Add thumbnail to the dom
 			this.$panel.append(this.$thumbnail)
-			this.$thumbnail.append(this.$thumbnailImage)
+			this.$thumbnail.append(this.$thumbnailCanvas)
 			this.$panel.append(this.$thumbnailOverlay)
-
-			this.$thumbnailImage.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=='
 		}
 
 	, setupThumbnail: function () {
@@ -143,6 +141,10 @@
 			this.$thumbnail.width(_width)
 			this.$thumbnail.height(_height)
 			this.$thumbnail.css({left: _left, top: _top})
+
+			// Setup Canvas
+			this.$thumbnailCanvas.attr('width', _width)
+			this.$thumbnailCanvas.attr('height', _height)
 
 			// Setup Overlay
 			this.$thumbnailOverlay.width(_width)
@@ -246,6 +248,7 @@
 		}
 
 		// reference is used when computing from %
+
 	, convertSizeToNumber: function (size, reference) {
 			// if function
 			if (Object.prototype.toString.call(size) === '[object Function]') {
@@ -514,9 +517,7 @@
 
 	, updateThumbnailImage: function (force_refresh) {
 			var that = this
-				, timeout = 0 // leave as 0 if force_refresh
-				, pan = this.cy.pan()
-				, zoom = this.cy.zoom()
+				, timeout = 0 // will remain 0 if force_refresh is true
 
 			// Set thumbnail framerate
 			!force_refresh && this.options.thumbnailFramerate > 0 && (timeout = ~~(1000 / this.options.thumbnailFramerate))
@@ -528,33 +529,9 @@
 
 			// Call it in the next queue frame
 			this.thumbUpdateTimeout = setTimeout(function(){
-				// TODO: Lock
+				var scale = that.$thumbnail.width() / that.width
 
-				// If graph is in basic position
-				if (zoom === 1 && pan.x === 0 && pan.y === 0) {
-					that.$thumbnailImage[0].src = that.cy.png()
-				}
-				// If we have to resize graph
-				else{
-					if (zoom !== 1) {
-						that.cy.zoom(1)
-					}
-					if (pan.x !== 0 || pan.y !== 0) {
-						that.cy.pan({x: 0, y: 0})
-					}
-
-					// Call it in the next queue frame
-					setTimeout(function () {
-						that.$thumbnailImage[0].src = that.cy.png()
-
-						if (zoom !== 1) {
-							that.cy.zoom(zoom)
-						}
-						if (pan.x !== 0 || pan.y !== 0) {
-							that.cy.pan(pan)
-						}
-					})
-				}
+				that.cy.renderTo(that.$thumbnailCanvas[0].getContext('2d'), scale, {x: 0, y: 0})
 			}, timeout)
 		}
 
