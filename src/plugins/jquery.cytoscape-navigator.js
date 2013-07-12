@@ -105,14 +105,21 @@
 
 	, initThumbnail: function () {
 			this.$thumbnail = $('<dib class="cytoscape-navigatorThumbnail"/>')
-			// Create blank image tag
+			// Create thumbnail
 			this.$thumbnailCanvas = $('<canvas/>')
+			// Create thumbnail cache level
+			this.$thumbnailCanvasBufferContainer = $('<div/>')
+			this.$thumbnailCanvasBuffer = $('<canvas/>')
 			// Used to capture mouse events
 			this.$thumbnailOverlay = $('<dib class="cytoscape-navigatorThumbnailOverlay"/>')
 
-			// Add thumbnail to the dom
+			// Add thumbnail container to the dom
 			this.$panel.append(this.$thumbnail)
+			// Add canvas cache and its container to the dom
+			this.$thumbnailCanvasBufferContainer.appendTo(this.$panel).hide().append(this.$thumbnailCanvasBuffer)
+			// Add thumbnail canvas to the dom
 			this.$thumbnail.append(this.$thumbnailCanvas)
+			// Add thumbnail overlay to the dom
 			this.$panel.append(this.$thumbnailOverlay)
 		}
 
@@ -145,6 +152,10 @@
 			// Setup Canvas
 			this.$thumbnailCanvas.attr('width', _width)
 			this.$thumbnailCanvas.attr('height', _height)
+
+			// Setup Canvas cache
+			this.$thumbnailCanvasBuffer.attr('width', this.width)
+			this.$thumbnailCanvasBuffer.attr('height', this.height)
 
 			// Setup Overlay
 			this.$thumbnailOverlay.width(_width)
@@ -531,7 +542,17 @@
 			this.thumbUpdateTimeout = setTimeout(function(){
 				var scale = that.$thumbnail.width() / that.width
 
-				that.cy.renderTo(that.$thumbnailCanvas[0].getContext('2d'), scale, {x: 0, y: 0})
+				// Copy thumnail to buffer
+				that.cy.renderTo(that.$thumbnailCanvasBuffer[0].getContext('2d'), 1, {x: 0, y: 0})
+				// Copy thumbnail from buffer to visible canvas
+				// Do it in next frame
+				setTimeout(function () {
+					var context = that.$thumbnailCanvas[0].getContext("2d")
+						, thumbnailSizes = that.eventData.thumbnailSizes
+
+					context.globalCompositeOperation = "copy"
+					context.drawImage(that.$thumbnailCanvasBuffer[0], 0, 0, that.width, that.height, 0, 0, thumbnailSizes.width, thumbnailSizes.height)
+				}, 1)
 			}, timeout)
 		}
 
