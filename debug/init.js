@@ -288,6 +288,7 @@ $(function(){
 						borderWidth: 1
 					}
 				, live: false
+				, thumbnailLiveFramerate: 2
 				});
 			});
 

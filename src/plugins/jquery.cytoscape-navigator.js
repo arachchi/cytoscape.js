@@ -156,7 +156,11 @@
 			// Populate thumbnail with a render of the graph
 			this.cy.on('done', function () {
 				that.updateThumbnailImage()
-				that.hookGraphUpdates()
+				if (that.options.thumbnailLiveFramerate === false) {
+					that.hookGraphUpdates()
+				} else {
+					that.setGraphUpdatesTimer()
+				}
 			})
 		}
 
@@ -512,6 +516,21 @@
 			this.cy.on('position add remove data', $.proxy(this.updateThumbnailImage, this, false))
 		}
 
+	, setGraphUpdatesTimer: function () {
+			var delay = 1000.0 / this.options.thumbnailLiveFramerate
+				, that = this
+				, updateFunction = function () {
+						setTimeout(function (){
+							that.updateThumbnailImage(true)
+							updateFunction()
+							console.log('update thumb')
+						}, delay)
+					}
+
+			// Init continuous update
+			updateFunction()
+		}
+
 	, updateThumbnailImage: function (force_refresh) {
 			var that = this
 				, timeout = 0 // leave as 0 if force_refresh
@@ -640,8 +659,9 @@
 	, live: true // if true than cy is moved when dragging, otherwise it will be done when dragging was finished
 	, liveFramerate: 0 // max number of graph changing; if is set 0 then the framerate is max
 	, zoomStep: 0.25
-	, thumbnailFramerate: 10
-	, dblClickDelay: 200
+	, thumbnailFramerate: 10 // frames per second
+	, thumbnailLiveFramerate: false // frames per second. Set false to disable
+	, dblClickDelay: 200 // miliseconds
 	}
 
 	$.fn.cyNavigator = $.fn.cytoscapeNavigator
