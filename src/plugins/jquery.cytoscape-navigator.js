@@ -472,14 +472,14 @@
 			_data.viewSetup.y = _y
 
 			// Move Cy
-			if (this.options.live) {
+			if (this.options.viewLiveFramerate !== false) {
 				// trigger instantly
-				if (this.options.liveFramerate == 0) {
+				if (this.options.viewLiveFramerate == 0) {
 					this.moveCy()
 				}
 				// trigger only once in time/framerate
 				else if (_data.timeout === null) {
-					_data.timeout = setTimeout($.proxy(this.moveCyClearTimeout, this), 1000/this.options.liveFramerate)
+					_data.timeout = setTimeout($.proxy(this.moveCyClearTimeout, this), 1000/this.options.viewLiveFramerate)
 				}
 			}
 		}
@@ -495,7 +495,7 @@
 			this.eventMove(ev)
 
 			// If mode is not live then move Cy on drag end
-			if (!this.options.live) {
+			if (this.options.viewLiveFramerate === false) {
 				this.moveCy()
 			}
 
@@ -653,8 +653,7 @@
 	, view: {
 			borderWidth: 0
 		}
-	, live: true // if true than cy is moved when dragging, otherwise it will be done when dragging was finished
-	, liveFramerate: 0 // max number of graph changing; if is set 0 then the framerate is max
+	, viewLiveFramerate: 0 // set false to update graph pan only on drag end; set 0 to do it instantly; set a number (frames per second) to update not more than N times per second
 	, zoomStep: 0.25
 	, thumbnailFramerate: 10 // frames per second
 	, thumbnailLiveFramerate: false // frames per second. Set false to disable
