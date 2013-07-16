@@ -62,7 +62,7 @@
 						this.$panel = options.container.first()
 
 						// Add class name
-						options.forceClassName && this.$panel.addClass(options.className)
+						this.$panel.addClass(options.className)
 					} else {
 						$.error("Container for jquery.cyNavigator is empty")
 						return
@@ -71,7 +71,7 @@
 					this.$panel = $(options.container).first()
 
 					// Add class name
-					options.forceClassName && this.$panel.addClass(options.className)
+					this.$panel.addClass(options.className)
 				} else {
 					$.error("There is no any element matching your selector for jquery.cyNavigator")
 					return
@@ -641,8 +641,7 @@
 
 	$.fn.cytoscapeNavigator.defaults = {
 		container: false
-	, forceClassName: true
-	, className: 'cytoscape-navigator'
+	, className: 'cytoscape-navigator' // set it to false or empty string to avoid setting class name
 	, position: {
 			vertical: 450 // can be 'top', 'bottom', 'middle', a number (will be used as px), a function (which returns a number) or a string which contains a number +px or +%. Percent will be computed based on container size.
 		, horizontal: 400 // can be 'left', 'right', 'center', a number (will be used as px), a function (which returns a number) or a string which contains a number +px or +%. Percent will be computed based on container size.
