@@ -287,7 +287,7 @@ $(function(){
 				, view: {
 						borderWidth: 1
 					}
-				, live: false
+				, viewLiveFramerate: false
 				, thumbnailLiveFramerate: 2
 				});
 			});
