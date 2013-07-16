@@ -105,17 +105,22 @@
 
 	, initThumbnail: function () {
 			this.$thumbnail = $('<dib class="cytoscape-navigatorThumbnail"/>')
-			// Create blank image tag
-			this.$thumbnailImage = $('<img alt=""/>')
+			// Create thumbnail
+			this.$thumbnailCanvas = $('<canvas/>')
+			// Create thumbnail cache level
+			this.$thumbnailCanvasBufferContainer = $('<div/>')
+			this.$thumbnailCanvasBuffer = $('<canvas/>')
 			// Used to capture mouse events
 			this.$thumbnailOverlay = $('<dib class="cytoscape-navigatorThumbnailOverlay"/>')
 
-			// Add thumbnail to the dom
+			// Add thumbnail container to the dom
 			this.$panel.append(this.$thumbnail)
-			this.$thumbnail.append(this.$thumbnailImage)
+			// Add canvas cache and its container to the dom
+			this.$thumbnailCanvasBufferContainer.appendTo(this.$panel).hide().append(this.$thumbnailCanvasBuffer)
+			// Add thumbnail canvas to the dom
+			this.$thumbnail.append(this.$thumbnailCanvas)
+			// Add thumbnail overlay to the dom
 			this.$panel.append(this.$thumbnailOverlay)
-
-			this.$thumbnailImage.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=='
 		}
 
 	, setupThumbnail: function () {
@@ -143,6 +148,14 @@
 			this.$thumbnail.width(_width)
 			this.$thumbnail.height(_height)
 			this.$thumbnail.css({left: _left, top: _top})
+
+			// Setup Canvas
+			this.$thumbnailCanvas.attr('width', _width)
+			this.$thumbnailCanvas.attr('height', _height)
+
+			// Setup Canvas cache
+			this.$thumbnailCanvasBuffer.attr('width', this.width)
+			this.$thumbnailCanvasBuffer.attr('height', this.height)
 
 			// Setup Overlay
 			this.$thumbnailOverlay.width(_width)
@@ -250,6 +263,7 @@
 		}
 
 		// reference is used when computing from %
+
 	, convertSizeToNumber: function (size, reference) {
 			// if function
 			if (Object.prototype.toString.call(size) === '[object Function]') {
@@ -533,9 +547,7 @@
 
 	, updateThumbnailImage: function (force_refresh) {
 			var that = this
-				, timeout = 0 // leave as 0 if force_refresh
-				, pan = this.cy.pan()
-				, zoom = this.cy.zoom()
+				, timeout = 0 // will remain 0 if force_refresh is true
 
 			// Set thumbnail framerate
 			!force_refresh && this.options.thumbnailFramerate > 0 && (timeout = ~~(1000 / this.options.thumbnailFramerate))
@@ -547,33 +559,19 @@
 
 			// Call it in the next queue frame
 			this.thumbUpdateTimeout = setTimeout(function(){
-				// TODO: Lock
+				var scale = that.$thumbnail.width() / that.width
 
-				// If graph is in basic position
-				if (zoom === 1 && pan.x === 0 && pan.y === 0) {
-					that.$thumbnailImage[0].src = that.cy.png()
-				}
-				// If we have to resize graph
-				else{
-					if (zoom !== 1) {
-						that.cy.zoom(1)
-					}
-					if (pan.x !== 0 || pan.y !== 0) {
-						that.cy.pan({x: 0, y: 0})
-					}
+				// Copy thumnail to buffer
+				that.cy.renderTo(that.$thumbnailCanvasBuffer[0].getContext('2d'), 1, {x: 0, y: 0})
+				// Copy thumbnail from buffer to visible canvas
+				// Do it in next frame
+				setTimeout(function () {
+					var context = that.$thumbnailCanvas[0].getContext("2d")
+						, thumbnailSizes = that.eventData.thumbnailSizes
 
-					// Call it in the next queue frame
-					setTimeout(function () {
-						that.$thumbnailImage[0].src = that.cy.png()
-
-						if (zoom !== 1) {
-							that.cy.zoom(zoom)
-						}
-						if (pan.x !== 0 || pan.y !== 0) {
-							that.cy.pan(pan)
-						}
-					})
-				}
+					context.globalCompositeOperation = "copy"
+					context.drawImage(that.$thumbnailCanvasBuffer[0], 0, 0, that.width, that.height, 0, 0, thumbnailSizes.width, thumbnailSizes.height)
+				}, 1)
 			}, timeout)
 		}
 
