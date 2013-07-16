@@ -549,8 +549,8 @@
 			var that = this
 				, timeout = 0 // will remain 0 if force_refresh is true
 
-			// Set thumbnail framerate
-			!force_refresh && this.options.thumbnailFramerate > 0 && (timeout = ~~(1000 / this.options.thumbnailFramerate))
+			// Set thumbnail update framerate
+			!force_refresh && this.options.thumbnailEventFramerate > 0 && (timeout = ~~(1000 / this.options.thumbnailEventFramerate))
 
 			// Clear old timeout as we are going to create new one
 			if (this.thumbUpdateTimeout !== undefined) {
@@ -599,7 +599,7 @@
 			var _data = this.eventData
 				, view = _data.viewSetup
 				, scale = 1.0 * this.width / _data.thumbnailSizes.width
-				, zoomDelta = this.options.zoomStep * (zoomIn ? 1 : -1)
+				, zoomDelta = this.options.mouseZoomStep * (zoomIn ? 1 : -1)
 
 			// Zoom about View center
 			this.cy.zoom({
@@ -654,9 +654,9 @@
 			borderWidth: 0
 		}
 	, viewLiveFramerate: 0 // set false to update graph pan only on drag end; set 0 to do it instantly; set a number (frames per second) to update not more than N times per second
-	, zoomStep: 0.25
-	, thumbnailFramerate: 10 // frames per second
-	, thumbnailLiveFramerate: false // frames per second. Set false to disable
+	, thumbnailEventFramerate: 10 // max thumbnail update's frames per second triggered by graph updates
+	, thumbnailLiveFramerate: false // max thumbnail update's frames per second. Set false to disable
+	, mouseZoomStep: 0.25 // scale relative to graph zoom
 	, dblClickDelay: 200 // miliseconds
 	}
 
