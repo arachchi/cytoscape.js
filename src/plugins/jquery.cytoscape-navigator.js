@@ -537,7 +537,6 @@
 						setTimeout(function (){
 							that.updateThumbnailImage(true)
 							updateFunction()
-							console.log('update thumb')
 						}, delay)
 					}
 
