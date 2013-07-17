@@ -3,7 +3,7 @@
 	"use strict";
 
 	var Navigator = function ( element, options ) {
-		this.init(element, options)
+		this._init(element, options)
 	}
 
 	Navigator.prototype = {
@@ -14,7 +14,7 @@
 		Main functions
 	****************************/
 
-	, init: function ( element, options ) {
+	, _init: function ( element, options ) {
 			var that = this
 
 			this.$element = $(element)
@@ -26,23 +26,23 @@
 			this.height = this.$element.height()
 
 			// Panel
-			this.initPanel()
-			this.setupPanel()
+			this._initPanel()
+			this._setupPanel()
 
 			// Thumbnail
-			this.initThumbnail()
-			this.setupThumbnail()
+			this._initThumbnail()
+			this._setupThumbnail()
 
 			// View
-			this.initView()
-			this.setupView()
+			this._initView()
+			this._setupView()
 
 			// Hook cy zoom and pan
 			this.cy.on('zoom pan', function () {
-				that.setupView()
+				that._setupView()
 			})
 
-			this.hookResize()
+			this._hookResize()
 		}
 
 	, destroy: function () {
@@ -53,7 +53,7 @@
 		Navigator elements functions
 	****************************/
 
-	, initPanel: function () {
+	, _initPanel: function () {
 			var options = this.options
 
 			if( options.container ) {
@@ -81,10 +81,10 @@
 				this.$element.append(this.$panel)
 			}
 
-			this.initEventsHandling()
+			this._initEventsHandling()
 		}
 
-	, setupPanel: function () {
+	, _setupPanel: function () {
 			var options = this.options
 
 			// Cache sizes
@@ -103,7 +103,7 @@
 			this.$panel.css({left: options.position._horizontal, top: options.position._vertical})
 		}
 
-	, initThumbnail: function () {
+	, _initThumbnail: function () {
 			this.$thumbnail = $('<dib class="cytoscape-navigatorThumbnail"/>')
 			// Create thumbnail
 			this.$thumbnailCanvas = $('<canvas/>')
@@ -123,7 +123,7 @@
 			this.$panel.append(this.$thumbnailOverlay)
 		}
 
-	, setupThumbnail: function () {
+	, _setupThumbnail: function () {
 			var that = this
 				, navigatorRatio = 1.0 * this.$panel.width() / this.$panel.height()
 				, navigatorThumbnailRatio = 1.0 * this.width / this.height
@@ -168,23 +168,23 @@
 
 			// Populate thumbnail with a render of the graph
 			this.cy.on('done', function () {
-				that.updateThumbnailImage()
+				that._updateThumbnailImage()
 				if (that.options.thumbnailLiveFramerate === false) {
-					that.hookGraphUpdates()
+					that._hookGraphUpdates()
 				} else {
-					that.setGraphUpdatesTimer()
+					that._setGraphUpdatesTimer()
 				}
 			})
 		}
 
-	, initView: function () {
+	, _initView: function () {
 			var that = this
 
 			this.$view = $('<div class="cytoscape-navigatorView"/>')
 			this.$thumbnail.append(this.$view)
 		}
 
-	, setupView: function () {
+	, _setupView: function () {
 			var width = 0
 				, height = 0
 				, position = {left: 0, top: 0}
@@ -297,7 +297,7 @@
 		Event handling functions
 	****************************/
 
-	, hookResize: function () {
+	, _hookResize: function () {
 			this.$element.on('resize', $.proxy(this.resize, this))
 		}
 
@@ -306,12 +306,12 @@
 			this.width = this.$element.width()
 			this.height = this.$element.height()
 
-			this.setupPanel()
-			this.setupThumbnail()
-			this.setupView()
+			this._setupPanel()
+			this._setupThumbnail()
+			this._setupView()
 		}
 
-	, initEventsHandling: function () {
+	, _initEventsHandling: function () {
 			var that = this
 				, eventsAll = [
 				// Mouse events
@@ -374,13 +374,13 @@
 
 
 					if (ev.type == 'mousedown' || ev.type == 'touchstart') {
-						that.eventMoveStart(ev)
+						that._eventMoveStart(ev)
 					} else if (ev.type == 'mousemove' || ev.type == 'touchmove') {
-						that.eventMove(ev)
+						that._eventMove(ev)
 					} else if (ev.type == 'mouseup' || ev.type == 'mouseout') {
-						that.eventMoveEnd(ev)
+						that._eventMoveEnd(ev)
 					} else if (ev.type == 'mousewheel' || ev.type == 'DOMMouseScroll') {
-						that.eventZoom(ev)
+						that._eventZoom(ev)
 					} else if (ev.type == 'mouseover') {
 						// console.log(ev)
 					}
@@ -392,7 +392,7 @@
 			})
 			}
 
-	, eventMoveStart: function (ev) {
+	, _eventMoveStart: function (ev) {
 			var _data = this.eventData
 				, now = new Date().getTime()
 
@@ -409,7 +409,7 @@
 				_data.hookPoint.y = _data.viewSetup.height / 2
 
 				// Move View to start point
-				this.eventMove({
+				this._eventMove({
 					offsetX: _data.thumbnailSizes.width / 2
 				, offsetY: _data.thumbnailSizes.height / 2
 				})
@@ -438,13 +438,13 @@
 					_data.hookPoint.y = _data.viewSetup.height / 2
 
 					// Move View to start point
-					this.eventMove(ev)
+					this._eventMove(ev)
 				}
 			}
 
 		}
 
-	, eventMove: function (ev) {
+	, _eventMove: function (ev) {
 			var that = this
 				, _data = this.eventData
 				, _x = 0
@@ -475,16 +475,16 @@
 			if (this.options.viewLiveFramerate !== false) {
 				// trigger instantly
 				if (this.options.viewLiveFramerate == 0) {
-					this.moveCy()
+					this._moveCy()
 				}
 				// trigger only once in time/framerate
 				else if (_data.timeout === null) {
-					_data.timeout = setTimeout($.proxy(this.moveCyClearTimeout, this), 1000/this.options.viewLiveFramerate)
+					_data.timeout = setTimeout($.proxy(this._moveCyClearTimeout, this), 1000/this.options.viewLiveFramerate)
 				}
 			}
 		}
 
-	, eventMoveEnd: function (ev) {
+	, _eventMoveEnd: function (ev) {
 			var _data = this.eventData
 
 			if (_data.isActive === false) {
@@ -492,18 +492,18 @@
 			}
 
 			// Trigger one last move
-			this.eventMove(ev)
+			this._eventMove(ev)
 
 			// If mode is not live then move Cy on drag end
 			if (this.options.viewLiveFramerate === false) {
-				this.moveCy()
+				this._moveCy()
 			}
 
 			// State
 			_data.isActive = false
 		}
 
-	, eventZoom: function (ev) {
+	, _eventZoom: function (ev) {
 			var zoomIn
 
 			if (ev.originalEvent.wheelDelta !== undefined) {
@@ -517,25 +517,25 @@
 			}
 
 			if (this.cy.zoomingEnabled()) {
-				this.zoomCy(zoomIn)
+				this._zoomCy(zoomIn)
 			}
 		}
 
-	, moveCyClearTimeout: function () {
-			this.moveCy()
+	, _moveCyClearTimeout: function () {
+			this._moveCy()
 			this.eventData.timeout = null
 		}
 
-	, hookGraphUpdates: function () {
-			this.cy.on('position add remove data', $.proxy(this.updateThumbnailImage, this, false))
+	, _hookGraphUpdates: function () {
+			this.cy.on('position add remove data', $.proxy(this._updateThumbnailImage, this, false))
 		}
 
-	, setGraphUpdatesTimer: function () {
+	, _setGraphUpdatesTimer: function () {
 			var delay = 1000.0 / this.options.thumbnailLiveFramerate
 				, that = this
 				, updateFunction = function () {
 						setTimeout(function (){
-							that.updateThumbnailImage(true)
+							that._updateThumbnailImage(true)
 							updateFunction()
 						}, delay)
 					}
@@ -544,7 +544,7 @@
 			updateFunction()
 		}
 
-	, updateThumbnailImage: function (force_refresh) {
+	, _updateThumbnailImage: function (force_refresh) {
 			var that = this
 				, timeout = 0 // will remain 0 if force_refresh is true
 
@@ -578,7 +578,7 @@
 		Navigator view moving
 	****************************/
 
-	, moveCy: function () {
+	, _moveCy: function () {
 			var that = this
 				, _data = this.eventData
 				// thumbnail available sizes
@@ -594,7 +594,7 @@
 			})
 		}
 
-	, zoomCy: function (zoomIn) {
+	, _zoomCy: function (zoomIn) {
 			var _data = this.eventData
 				, view = _data.viewSetup
 				, scale = 1.0 * this.width / _data.thumbnailSizes.width
@@ -629,6 +629,8 @@
 					$.error("cyNavigator has no such method")
 				} else if (typeof data[option] !== typeof function(){}) {
 					$.error("cyNavigator."+option+" is not a function")
+				} else if (option.charAt(0) == '_') {
+					$.error("cyNavigator."+option+" is a private function")
 				} else {
 					data[option].call(data, Array.prototype.slice.call(_arguments, 1))
 				}
