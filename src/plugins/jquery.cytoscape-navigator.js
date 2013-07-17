@@ -33,6 +33,16 @@
 			this._initThumbnail()
 			this._setupThumbnail()
 
+			// Populate thumbnail with a render of the graph when cy is done
+			this.cy.on('done', function () {
+				that._updateThumbnailImage()
+				if (that.options.thumbnailLiveFramerate === false) {
+					that._hookGraphUpdates()
+				} else {
+					that._setGraphUpdatesTimer()
+				}
+			})
+
 			// View
 			this._initView()
 			this._setupView()
@@ -166,15 +176,7 @@
 			this.eventData.thumbnailSizes.width = _width
 			this.eventData.thumbnailSizes.height = _height
 
-			// Populate thumbnail with a render of the graph
-			this.cy.on('done', function () {
-				that._updateThumbnailImage()
-				if (that.options.thumbnailLiveFramerate === false) {
-					that._hookGraphUpdates()
-				} else {
-					that._setGraphUpdatesTimer()
-				}
-			})
+			that._updateThumbnailImage()
 		}
 
 	, _initView: function () {
