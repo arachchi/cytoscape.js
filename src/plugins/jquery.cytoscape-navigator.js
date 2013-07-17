@@ -46,7 +46,7 @@
 		}
 
 	, destroy: function () {
-			this.$element.remove()
+			this.$panel.remove()
 		}
 
 	/****************************
