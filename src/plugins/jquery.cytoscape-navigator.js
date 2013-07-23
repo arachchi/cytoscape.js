@@ -552,23 +552,16 @@
 	, _updateThumbnailImage: function (force_refresh) {
 			var that = this
 				, timeout = 0 // will remain 0 if force_refresh is true
-				, _data = this.eventData
 
 			// Set thumbnail update framerate
 			!force_refresh && this.options.thumbnailEventFramerate > 0 && (timeout = ~~(1000 / this.options.thumbnailEventFramerate))
 
-			// If it is still drawing, just mark as dirty
-			if (_data.thumbnailUpdateLock === true) {
-				_data.thumbnailUpdateDirty = true
-			} else {
-				// Lock
-				_data.thumbnailUpdateLock = true
-
-				setTimeout(function(){
+			if (this._thumbUpdateTimeout === undefined || this._thumbUpdateTimeout === null) {
+				this._thumbUpdateTimeout = setTimeout(function(){
 					// Copy thumnail to buffer
 					that.cy.renderTo(that.$thumbnailCanvasBuffer[0].getContext('2d'), 1, {x: 0, y: 0})
 					// Copy thumbnail from buffer to visible canvas
-					// Do it in next event queue frame
+					// Do it in next frame
 					setTimeout(function () {
 						var context = that.$thumbnailCanvas[0].getContext("2d")
 							, thumbnailSizes = that.eventData.thumbnailSizes
@@ -576,20 +569,10 @@
 						context.globalCompositeOperation = "copy"
 						context.drawImage(that.$thumbnailCanvasBuffer[0], 0, 0, that.width, that.height, 0, 0, thumbnailSizes.width, thumbnailSizes.height)
 
-						// Unlock
-						_data.thumbnailUpdateLock = false
-
-						// Check if is dirty
-						if (_data.thumbnailUpdateDirty === true) {
-							// Make clear
-							_data.thumbnailUpdateDirty = false
-							// Call thumbnail draw
-							that._updateThumbnailImage()
-						}
+						that._thumbUpdateTimeout = null
 					}, 1)
 				}, timeout)
 			}
-
 		}
 
 	/****************************
