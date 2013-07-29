@@ -508,20 +508,10 @@
 		}
 
 	, _eventZoom: function (ev) {
-			var zoomIn
-
-			if (ev.originalEvent.wheelDelta !== undefined) {
-				zoomIn = ev.originalEvent.wheelDelta > 0
-			}
-			// Mozilla specific event
-			else if (ev.originalEvent.detail !== undefined) {
-				zoomIn = ev.originalEvent.detail > 0
-			} else {
-				return;
-			}
+			var zoomRate = Math.pow(10, ev.originalEvent.wheelDeltaY / 1000 || ev.originalEvent.detail / -32)
 
 			if (this.cy.zoomingEnabled()) {
-				this._zoomCy(zoomIn)
+				this._zoomCy(zoomRate)
 			}
 		}
 
@@ -595,15 +585,20 @@
 			})
 		}
 
-	, _zoomCy: function (zoomIn) {
+	/**
+	 * Zooms graph.
+	 *
+	 * @this {cytoscapeNavigator}
+	 * @param {number} zoomRate The zoom rate value. 1 is 100%.
+	 */
+	, _zoomCy: function (zoomRate) {
 			var _data = this.eventData
 				, view = _data.viewSetup
 				, scale = 1.0 * this.width / _data.thumbnailSizes.width
-				, zoomDelta = this.options.mouseZoomStep * (zoomIn ? 1 : -1)
 
 			// Zoom about View center
 			this.cy.zoom({
-				level: this.cy.zoom() * (1 + zoomDelta)
+				level: this.cy.zoom() * zoomRate
 			, renderedPosition: {
 					x: scale * (view.x + view.width/2)
 				, y: scale * (view.y + view.height/2)
@@ -658,7 +653,6 @@
 	, viewLiveFramerate: 0 // set false to update graph pan only on drag end; set 0 to do it instantly; set a number (frames per second) to update not more than N times per second
 	, thumbnailEventFramerate: 10 // max thumbnail update's frames per second triggered by graph updates
 	, thumbnailLiveFramerate: false // max thumbnail update's frames per second. Set false to disable
-	, mouseZoomStep: 0.25 // scale relative to graph zoom
 	, dblClickDelay: 200 // miliseconds
 	}
 
