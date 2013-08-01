@@ -509,9 +509,14 @@
 
 	, _eventZoom: function (ev) {
 			var zoomRate = Math.pow(10, ev.originalEvent.wheelDeltaY / 1000 || ev.originalEvent.detail / -32)
+				, overlay_offset = this.$thumbnailOverlay.offset()
+				, mouse_position = {
+						left: ev.originalEvent.pageX - overlay_offset.left
+					, top: ev.originalEvent.pageY - overlay_offset.top
+					}
 
 			if (this.cy.zoomingEnabled()) {
-				this._zoomCy(zoomRate)
+				this._zoomCy(zoomRate, mouse_position)
 			}
 		}
 
@@ -591,18 +596,41 @@
 	 * @this {cytoscapeNavigator}
 	 * @param {number} zoomRate The zoom rate value. 1 is 100%.
 	 */
-	, _zoomCy: function (zoomRate) {
+	, _zoomCy: function (zoomRate, zoomCenterRaw) {
 			var _data = this.eventData
 				, view = _data.viewSetup
 				, scale = 1.0 * this.width / _data.thumbnailSizes.width
+				, zoomCenter
+				, zoomCenterRelative
+				, isZoomCenterInView = false
+
+			if (zoomCenterRaw) {
+				isZoomCenterInView = (zoomCenterRaw.left > view.x) && (zoomCenterRaw.left < view.x + view.width)
+					&& (zoomCenterRaw.top > view.y) && (zoomCenterRaw.top < view.y + view.height)
+			}
+
+			if (zoomCenterRaw && isZoomCenterInView) {
+				// TODO find out where from is the error on small view sizes
+				zoomCenterRelative = {
+					x: zoomCenterRaw.left - view.x
+				, y: zoomCenterRaw.top - view.y
+				}
+
+				zoomCenter = {
+					x: zoomCenterRelative.x * (1.0 * this.width / view.width)
+				, y: zoomCenterRelative.y * (1.0 * this.height / view.height)
+				}
+			} else {
+				zoomCenter = {
+					x: scale * (view.x + view.width/2)
+				, y: scale * (view.y + view.height/2)
+				}
+			}
 
 			// Zoom about View center
 			this.cy.zoom({
 				level: this.cy.zoom() * zoomRate
-			, renderedPosition: {
-					x: scale * (view.x + view.width/2)
-				, y: scale * (view.y + view.height/2)
-				}
+			, renderedPosition: zoomCenter
 			})
 		}
 
