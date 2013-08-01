@@ -509,9 +509,14 @@
 
 	, _eventZoom: function (ev) {
 			var zoomRate = Math.pow(10, ev.originalEvent.wheelDeltaY / 1000 || ev.originalEvent.detail / -32)
+				, overlay_offset = this.$thumbnailOverlay.offset()
+				, mouse_position = {
+						left: ev.originalEvent.pageX - overlay_offset.left
+					, top: ev.originalEvent.pageY - overlay_offset.top
+					}
 
 			if (this.cy.zoomingEnabled()) {
-				this._zoomCy(zoomRate)
+				this._zoomCy(zoomRate, mouse_position)
 			}
 		}
 
@@ -591,18 +596,55 @@
 	 * @this {cytoscapeNavigator}
 	 * @param {number} zoomRate The zoom rate value. 1 is 100%.
 	 */
-	, _zoomCy: function (zoomRate) {
+	, _zoomCy: function (zoomRate, zoomCenterRaw) {
 			var _data = this.eventData
 				, view = _data.viewSetup
 				, scale = 1.0 * this.width / _data.thumbnailSizes.width
+				, zoomCenter
+				, isZoomCenterInView = false
+
+			if (zoomCenterRaw) {
+				isZoomCenterInView = (zoomCenterRaw.left > view.x) && (zoomCenterRaw.left < view.x + view.width)
+					&& (zoomCenterRaw.top > view.y) && (zoomCenterRaw.top < view.y + view.height)
+			}
+
+			if (zoomCenterRaw && isZoomCenterInView) {
+				zoomCenter = {
+					x: scale * (view.x + (zoomCenterRaw.left / zoomRate))
+				, y: scale * (view.y + (zoomCenterRaw.top / zoomRate))
+				}
+
+				// zoomCenter = {
+				// 	x: scale * zoomCenterRaw.left
+				// , y: scale * zoomCenterRaw.top
+				// }
+				// console.log(zoomCenter, view, zoomCenterRaw, this.cy.pan())
+				// x = scale * zoomCenterRaw.left
+				// x -= this.cy.pan().x
+				// x /= this.cy.zoom()* zoomRate
+				// y = scale * zoomCenterRaw.top
+				// y -= this.cy.pan().y
+				// y /= this.cy.zoom()* zoomRate
+				// zoomCenter = {
+				// 	'x': x
+				// , 'y': y
+				// }
+				// zoomCenter = {
+				// 	'x': 300
+				// , 'y': 300
+				// }
+				console.log(zoomRate, zoomCenter)
+			} else {
+				zoomCenter = {
+					x: scale * (view.x + view.width/2)
+				, y: scale * (view.y + view.height/2)
+				}
+			}
 
 			// Zoom about View center
 			this.cy.zoom({
 				level: this.cy.zoom() * zoomRate
-			, renderedPosition: {
-					x: scale * (view.x + view.width/2)
-				, y: scale * (view.y + view.height/2)
-				}
+			, renderedPosition: zoomCenter
 			})
 		}
 
