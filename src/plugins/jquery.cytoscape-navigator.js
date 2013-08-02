@@ -601,6 +601,7 @@
 				, view = _data.viewSetup
 				, scale = 1.0 * this.width / _data.thumbnailSizes.width
 				, zoomCenter
+				, zoomCenterRelative
 				, isZoomCenterInView = false
 
 			if (zoomCenterRaw) {
@@ -609,31 +610,16 @@
 			}
 
 			if (zoomCenterRaw && isZoomCenterInView) {
-				zoomCenter = {
-					x: scale * (view.x + (zoomCenterRaw.left / zoomRate))
-				, y: scale * (view.y + (zoomCenterRaw.top / zoomRate))
+				// TODO find out where from is the error on small view sizes
+				zoomCenterRelative = {
+					x: zoomCenterRaw.left - view.x
+				, y: zoomCenterRaw.top - view.y
 				}
 
-				// zoomCenter = {
-				// 	x: scale * zoomCenterRaw.left
-				// , y: scale * zoomCenterRaw.top
-				// }
-				// console.log(zoomCenter, view, zoomCenterRaw, this.cy.pan())
-				// x = scale * zoomCenterRaw.left
-				// x -= this.cy.pan().x
-				// x /= this.cy.zoom()* zoomRate
-				// y = scale * zoomCenterRaw.top
-				// y -= this.cy.pan().y
-				// y /= this.cy.zoom()* zoomRate
-				// zoomCenter = {
-				// 	'x': x
-				// , 'y': y
-				// }
-				// zoomCenter = {
-				// 	'x': 300
-				// , 'y': 300
-				// }
-				console.log(zoomRate, zoomCenter)
+				zoomCenter = {
+					x: zoomCenterRelative.x * (1.0 * this.width / view.width)
+				, y: zoomCenterRelative.y * (1.0 * this.height / view.height)
+				}
 			} else {
 				zoomCenter = {
 					x: scale * (view.x + view.width/2)
