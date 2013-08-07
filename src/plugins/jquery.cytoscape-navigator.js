@@ -677,7 +677,7 @@
 	$.fn.cytoscapeNavigator.Constructor = Navigator
 
 	$.fn.cytoscapeNavigator.defaults = {
-		container: false
+		container: false // can be a HTML or jQuery element or jQuery selector
 	, className: 'cytoscape-navigator' // set it to false or empty string to avoid setting class name
 	, position: {
 			vertical: 450 // can be 'top', 'bottom', 'middle', a number (will be used as px), a function (which returns a number) or a string which contains a number +px or +%. Percent will be computed based on container size.
