@@ -610,15 +610,9 @@
 			}
 
 			if (zoomCenterRaw && isZoomCenterInView) {
-				// TODO find out where from is the error on small view sizes
-				zoomCenterRelative = {
-					x: zoomCenterRaw.left - view.x
-				, y: zoomCenterRaw.top - view.y
-				}
-
 				zoomCenter = {
-					x: zoomCenterRelative.x * (1.0 * this.width / view.width)
-				, y: zoomCenterRelative.y * (1.0 * this.height / view.height)
+					x: (zoomCenterRaw.left - view.x) * (1.0 * this.width / view.width)
+				, y: (zoomCenterRaw.top - view.y) * (1.0 * this.height / view.height)
 				}
 			} else {
 				zoomCenter = {
@@ -630,7 +624,7 @@
 			// Zoom about View center
 			this.cy.zoom({
 				level: this.cy.zoom() * zoomRate
-			, renderedPosition: zoomCenter
+			, position: zoomCenter
 			})
 		}
 
