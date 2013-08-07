@@ -146,12 +146,12 @@
 				// panel width is bigger than thumbnail width
 				_width = navigatorThumbnailRatio * this.$panel.height()
 				_height = this.$panel.height()
-				_left = (this.$panel.width() - _height)/2
+				_left = (this.$panel.width() - _width)/2
 			} else {
 				// panel height is bigger than thumbnail height
-				_width =  this.$panel.width()
-				_height = navigatorThumbnailRatio * this.$panel.width()
-				_top = (this.$panel.height() - _width)/2
+				_width = this.$panel.width()
+				_height = this.$panel.width() / navigatorThumbnailRatio
+				_top = (this.$panel.height() - _height)/2
 			}
 
 			// Setup Thumbnail
