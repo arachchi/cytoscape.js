@@ -243,7 +243,6 @@
 				this.eventData.viewSetup.x = position.left
 				this.eventData.viewSetup.y = position.top
 			}
-
 		}
 
 	/****************************
@@ -394,7 +393,7 @@
 				// Don't use peventPropagation as it cancels sometimes moure handler
 				return false;
 			})
-			}
+		}
 
 	, _eventMoveStart: function (ev) {
 			var _data = this.eventData
@@ -445,7 +444,6 @@
 					this._eventMove(ev)
 				}
 			}
-
 		}
 
 	, _eventMove: function (ev) {
@@ -627,7 +625,6 @@
 			, position: zoomCenter
 			})
 		}
-
 	}
 
 	$.fn.cytoscapeNavigator = function ( option ) {
