@@ -452,6 +452,8 @@
 				, _x = 0
 				, _y = 0
 
+			this._checkMousePosition(ev)
+
 			// break if it is useless event
 			if (_data.isActive === false) {
 				return;
@@ -486,8 +488,27 @@
 			}
 		}
 
+	, _checkMousePosition: function (ev) {
+			var that = this
+				, _view = this.eventData.viewSetup
+				, view_border = this.options.view.borderWidth
+
+			// All catched events are over thumbnail
+			this.$panel.addClass('mouseover-thumbnail')
+
+			if(ev.offsetX > _view.x && ev.offsetX < _view.x + view_border * 2 + _view.width
+				&& ev.offsetY > _view.y && ev.offsetY < _view.y + view_border * 2 + _view.height) {
+				this.$panel.addClass('mouseover-view')
+			} else {
+				this.$panel.removeClass('mouseover-view')
+			}
+		}
+
 	, _eventMoveEnd: function (ev) {
 			var _data = this.eventData
+
+			// Remove classes when mouse is outside of thumbnail
+			this.$panel.removeClass('mouseover-thumbnail mouseover-view')
 
 			if (_data.isActive === false) {
 				return;
