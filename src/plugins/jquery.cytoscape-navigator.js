@@ -66,7 +66,7 @@
 
 				setTimeout(function(){
 					// recall as fonts may still not render
-					that._setupThumbnail()
+					that._checkThumbnailSizeAndUpdate()
 				},1)
 			})
 		}
@@ -238,8 +238,11 @@
 				, thumbnailWidth = this.$thumbnail.width() - borderDouble
 				, thumbnailHeight = this.$thumbnail.height() - borderDouble
 				// cy vieport sizes
-				, cyZoom = this.cy.zoom()
-				, cyPan = this.cy.pan()
+				, cyZoom = this.cy.zoom() / this.$thumbnail.zoom
+				, cyPan = {
+						x: this.cy.pan().x - this.$thumbnail.pan.x
+					, y: this.cy.pan().y - this.$thumbnail.pan.y
+					}
 				, cyWidth = this.width * cyZoom
 				, cyHeight = this.height * cyZoom
 
@@ -592,7 +595,7 @@
 				, updateFunction = function () {
 						// Use timeout instead of interval as it is not accumulating events if events pool is not processed fast enough
 						setTimeout(function (){
-							that._updateThumbnailImage(true)
+							that._checkThumbnailSizeAndUpdate(true)
 							updateFunction()
 						}, delay)
 					}
