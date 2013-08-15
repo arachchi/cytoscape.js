@@ -613,6 +613,7 @@
 
 			if (this._thumbUpdateTimeout === undefined || this._thumbUpdateTimeout === null) {
 				this._thumbUpdateTimeout = setTimeout(function(){
+					// TODO remove double buffering as now it doesn't help to prevent bug #313
 					// Copy scaled thumnail to buffer
 					that.cy.renderTo(that.$thumbnailCanvasBuffer[0].getContext('2d'), that.$thumbnail.zoom, that.$thumbnail.pan)
 					// Copy thumbnail from buffer to visible canvas
