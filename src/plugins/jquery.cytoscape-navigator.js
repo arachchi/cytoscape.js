@@ -31,28 +31,44 @@
 
 			// Thumbnail
 			this._initThumbnail()
-			this._setupThumbnail()
+
+			// View
+			this._initView()
+
+			// Listen for events
+			this._initEventsHandling()
 
 			// Populate thumbnail with a render of the graph when cy is done
 			this.cy.on('done', function () {
+				// Setup thumbnail based on bounding box. First need to call ThumbnailSizes
+				that._setupThumbnailSizes()
+				that._setupThumbnail()
+
 				that._updateThumbnailImage()
 				if (that.options.thumbnailLiveFramerate === false) {
 					that._hookGraphUpdates()
 				} else {
 					that._setGraphUpdatesTimer()
 				}
-			})
 
-			// View
-			this._initView()
-			this._setupView()
-
-			// Hook cy zoom and pan
-			this.cy.on('zoom pan', function () {
+				// Setup view based on thumbnail
 				that._setupView()
-			})
 
-			this._hookResize()
+				// Hook cy zoom and pan
+				that.cy.on('zoom pan', function () {
+					that._setupView()
+				})
+
+				// Hook element resize
+				that.$element.on('resize', function () {
+					that.resize()
+				})
+
+				setTimeout(function(){
+					// recall as fonts may still not render
+					that._setupThumbnail()
+				},1)
+			})
 		}
 
 	, destroy: function () {
@@ -90,8 +106,6 @@
 				this.$panel = $('<div class="'+options.className+'"/>')
 				this.$element.append(this.$panel)
 			}
-
-			this._initEventsHandling()
 		}
 
 	, _setupPanel: function () {
@@ -177,6 +191,34 @@
 			this.eventData.thumbnailSizes.height = _height
 
 			that._updateThumbnailImage()
+		}
+
+	, _setupThumbnailSizes: function () {
+			var boundingBox = this.cy.elements().boundingBox()
+
+			this.$thumbnail.zoom = Math.min(this.height /  boundingBox.h, this.width /  boundingBox.w)
+			this.$thumbnail.pan = {
+				x: (this.width - this.$thumbnail.zoom * (boundingBox.x1 + boundingBox.x2))/2
+			, y: (this.height - this.$thumbnail.zoom * (boundingBox.y1 + boundingBox.y2))/2
+			}
+		}
+
+		// If bounding box has changed then update sizes
+		// Else just update thumbnail
+	, _checkThumbnailSizeAndUpdate: function () {
+			// TODO make this part beautiful
+			var _zoom = this.$thumbnail.zoom
+				, _pan_x = this.$thumbnail.pan.x
+				, _pan_y = this.$thumbnail.pan.y
+
+			this._setupThumbnailSizes()
+
+			if (_zoom != this.$thumbnail.zoom || _pan_x != this.$thumbnail.pan.x || _pan_y != this.$thumbnail.pan.y) {
+				this._setupThumbnail()
+				this._setupView()
+			} else {
+				this._updateThumbnailImage()
+			}
 		}
 
 	, _initView: function () {
@@ -297,10 +339,6 @@
 	/****************************
 		Event handling functions
 	****************************/
-
-	, _hookResize: function () {
-			this.$element.on('resize', $.proxy(this.resize, this))
-		}
 
 	, resize: function () {
 			// Cache sizes
@@ -545,7 +583,7 @@
 		}
 
 	, _hookGraphUpdates: function () {
-			this.cy.on('position add remove data', $.proxy(this._updateThumbnailImage, this, false))
+			this.cy.on('position add remove data', $.proxy(this._checkThumbnailSizeAndUpdate, this, false))
 		}
 
 	, _setGraphUpdatesTimer: function () {
@@ -572,8 +610,8 @@
 
 			if (this._thumbUpdateTimeout === undefined || this._thumbUpdateTimeout === null) {
 				this._thumbUpdateTimeout = setTimeout(function(){
-					// Copy thumnail to buffer
-					that.cy.renderTo(that.$thumbnailCanvasBuffer[0].getContext('2d'), 1, {x: 0, y: 0})
+					// Copy scaled thumnail to buffer
+					that.cy.renderTo(that.$thumbnailCanvasBuffer[0].getContext('2d'), that.$thumbnail.zoom, that.$thumbnail.pan)
 					// Copy thumbnail from buffer to visible canvas
 					// Do it in next frame
 					setTimeout(function () {
