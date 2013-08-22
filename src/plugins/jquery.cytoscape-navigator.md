@@ -10,7 +10,7 @@ Navigation Panel is usually a smaller window/panel/block which is a mirror of ma
 
 ## Examples
 
-_todo_
+[Examples page](http://bumbu.github.io/cytoscape.js/debug/navigator.html)
 
 ## Available options
 
