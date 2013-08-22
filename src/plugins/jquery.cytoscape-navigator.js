@@ -197,6 +197,8 @@
 			var boundingBox = this.cy.elements().boundingBox()
 
 			this.$thumbnail.zoom = Math.min(this.height /  boundingBox.h, this.width /  boundingBox.w)
+
+			// Used on thumbnail generation
 			this.$thumbnail.pan = {
 				x: (this.width - this.$thumbnail.zoom * (boundingBox.x1 + boundingBox.x2))/2
 			, y: (this.height - this.$thumbnail.zoom * (boundingBox.y1 + boundingBox.y2))/2
@@ -229,32 +231,36 @@
 		}
 
 	, _setupView: function () {
+			if (this.eventData.viewSetup.locked)
+				return
+
 			var width = 0
 				, height = 0
 				, position = {left: 0, top: 0}
-				, visible = true
 				// thumbnail available sizes
-				, borderDouble = this.options.view.borderWidth * 2
-				, thumbnailWidth = this.$thumbnail.width() - borderDouble
-				, thumbnailHeight = this.$thumbnail.height() - borderDouble
+				, thumbnailBorderDouble = this.options.view.borderWidth * 2
+				, thumbnailWidth = this.$thumbnail.width() - thumbnailBorderDouble
+				, thumbnailHeight = this.$thumbnail.height() - thumbnailBorderDouble
 				// cy vieport sizes
-				, cyZoom = this.cy.zoom() / this.$thumbnail.zoom
+				, cyZoom = this.cy.zoom()
+				// , cyWidth = this.width * cyZoom
+				// , cyHeight = this.height * cyZoom
 				, cyPan = {
-						x: this.cy.pan().x - this.$thumbnail.pan.x
-					, y: this.cy.pan().y - this.$thumbnail.pan.y
+						x: this.cy.pan().x
+					, y: this.cy.pan().y
 					}
-				, cyWidth = this.width * cyZoom
-				, cyHeight = this.height * cyZoom
+				, bb = this.cy.elements().boundingBox()
+				, bb_w = this.width / this.$thumbnail.zoom  // bounding box with graph's proportions
+				, bb_h = this.height / this.$thumbnail.zoom // bounding box with graph's proportions
 
-			if( cyPan.x > this.width || cyPan.x < -cyWidth || cyPan.y > this.height || cyPan.y < -cyHeight) {
-				visible = false
+			// TODO restore condition
+			// if (cyPan.x > this.width || cyPan.x < -cyWidth || cyPan.y > this.height || cyPan.y < -cyHeight) {
+			if (false) {
 				this.$view.hide()
 			} else {
-				visible = true
-
 				// Horizontal computation
-				position.left = -thumbnailWidth * (cyPan.x / cyWidth)
-				position.right = position.left + (thumbnailWidth / cyZoom)
+				position.left = -((cyPan.x - bb_w + bb.w)/cyZoom + bb.x1) * thumbnailWidth / bb_w
+				position.right = position.left + (thumbnailWidth / cyZoom * this.$thumbnail.zoom)
 
 				// Limit view inside thumbnails borders
 				position.left = Math.max(0, position.left)
@@ -266,14 +272,14 @@
 				delete position.right
 
 				// Vertical computation
-				position.top = -thumbnailHeight * (cyPan.y / cyHeight)
-				position.bottom = position.top + (thumbnailHeight / cyZoom)
+				position.top = -((cyPan.y - bb_h + bb.h)/cyZoom + bb.y1) * thumbnailHeight / bb_h
+				position.bottom = position.top + (thumbnailHeight / cyZoom * this.$thumbnail.zoom)
 
 				// Limit view inside thumbnails borders
 				position.top = Math.max(0, position.top)
 				position.bottom = Math.min(thumbnailHeight, position.bottom)
 
-				// Compute width and remove position.right
+				// Compute width and remove position.bottom
 				height = position.bottom - position.top
 				;// for delete
 				delete position.bottom
@@ -386,6 +392,7 @@
 				, y: 0
 				, width: 0
 				, height: 0
+				, locked: false
 				}
 			, timeout: null // used to keep stable framerate
 			, lastMoveStartTime: null
@@ -467,6 +474,8 @@
 			else {
 				_data.lastMoveStartTime = now
 				_data.isActive = true
+				// Lock view moving caused by cy events
+				_data.viewSetup.locked = true
 
 				// if event started in View
 				if (ev.offsetX >= _data.viewSetup.x && ev.offsetX <= _data.viewSetup.x + _data.viewSetup.width
@@ -492,6 +501,16 @@
 				, _data = this.eventData
 				, _x = 0
 				, _y = 0
+				, thumbnailToViewScale = this.cy.zoom() / this.$thumbnail.zoom
+				, viewsMaxSizes
+
+			if (thumbnailToViewScale > 1)
+				viewsMaxSizes = {
+					width: _data.thumbnailSizes.width / thumbnailToViewScale
+				,	height: _data.thumbnailSizes.height / thumbnailToViewScale
+				}
+			else
+				viewsMaxSizes = _data.viewSetup
 
 			this._checkMousePosition(ev)
 
@@ -547,6 +566,9 @@
 
 	, _eventMoveEnd: function (ev) {
 			var _data = this.eventData
+
+			// Unlock view changing caused by cy events
+			_data.viewSetup.locked = false
 
 			// Remove classes when mouse is outside of thumbnail
 			this.$panel.removeClass('mouseover-thumbnail mouseover-view')
@@ -644,10 +666,13 @@
 				, thumbnailHeight = _data.thumbnailSizes.height - thumbnailBorderDouble
 				// cy vieport zoom
 				, cyZoom = this.cy.zoom()
+				, bb = this.cy.elements().boundingBox()
+				, bb_w = this.width / this.$thumbnail.zoom  // bounding box with graph's proportions
+				, bb_h = this.height / this.$thumbnail.zoom // bounding box with graph's proportions
 
 			this.cy.pan({
-				x: -_data.viewSetup.x * this.width * cyZoom / thumbnailWidth
-			, y: -_data.viewSetup.y * this.height * cyZoom / thumbnailHeight
+				x: -(_data.viewSetup.x / thumbnailWidth * bb_w + bb.x1) * cyZoom + (bb_w - bb.w)
+			, y: -(_data.viewSetup.y / thumbnailHeight * bb_h + bb.y1) * cyZoom + (bb_h - bb.h)
 			})
 		}
 
