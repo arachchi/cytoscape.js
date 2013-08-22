@@ -10,6 +10,8 @@ Navigation Panel is usually a smaller window/panel/block which is a mirror of ma
 
 ## Using the plugin
 
+### Initialization
+
 Plugin should be instantiated when graph is loaded. Plugin constructor is cytoscapeNavigator (or cyNavigator).
 
 It can be done: 
@@ -34,6 +36,30 @@ It can be done:
         $button.click(function(){
                 $container.cyNavigator()
         })
+        
+### Styling
+
+Navigator and its components (thumbnail's container, view's container) may be styled via css.
+
+* Ovveride Navigator border and background:
+
+        .cytoscape-navigator{ border: 2px solid red; background: blue; }
+* Ovveride thumbnail's container when mouse is over thumbnail
+
+        .cytoscape-navigator.mouseover-thumbnail .cytoscape-navigatorThumbnail{ background: yellow; }
+* Ovveride view's container when mouse is over view
+
+        .cytoscape-navigator.mouseover-view .cytoscape-navigatorView{ background: rgba(0,255,0,0.5); }
+
+Navigator HTML structure looks like:
+
+        <div class="cytoscape-navigator">
+                <dib class="cytoscape-navigatorThumbnail">
+                        <canvas></canvas>
+                        <div class="cytoscape-navigatorView"></div>
+                </dib>
+                <dib class="cytoscape-navigatorThumbnailOverlay"></dib>
+        </div>
 
 ## Examples
 
