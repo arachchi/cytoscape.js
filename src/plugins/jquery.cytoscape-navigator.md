@@ -106,4 +106,11 @@ Maximal delay (in miliseconds) between two clicks to consider them as a double c
 
 ## Public API
 
-_todo_
+Access plugin methods by calling cyNavigator('function name') from jQuery element graph container:
+
+    $('#cytoscape').cyNavigator('resize') // call resize event to refresh navigator data
+    
+List of available methods:
+* destroy
+* resize
+
