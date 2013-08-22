@@ -37,6 +37,25 @@ It can be done:
                 $container.cyNavigator()
         })
         
+### Customizing plugin
+
+Plugin accepts custom options in form of an object. Full list of available opions is in [Available options](#available-options) section.
+
+    $button.click(function(){
+        $container.cyNavigator({
+            position: {
+                  horizontal: function(){return $container2.width()}
+                , vertical: 'top'
+            }
+            , size: {
+                  height: "45%"
+                , width: function(){return 200;}
+            }
+            , viewLiveFramerate: 5
+            , thumbnailEventFramerate: 0
+        })
+    })
+        
 ### Styling
 
 Navigator and its components (thumbnail's container, view's container) may be styled via css.
@@ -53,13 +72,13 @@ Navigator and its components (thumbnail's container, view's container) may be st
 
 Navigator HTML structure looks like:
 
-        <div class="cytoscape-navigator">
-                <dib class="cytoscape-navigatorThumbnail">
-                        <canvas></canvas>
-                        <div class="cytoscape-navigatorView"></div>
-                </dib>
-                <dib class="cytoscape-navigatorThumbnailOverlay"></dib>
-        </div>
+    <div class="cytoscape-navigator">
+        <dib class="cytoscape-navigatorThumbnail">
+            <canvas></canvas>
+            <div class="cytoscape-navigatorView"></div>
+        </dib>
+        <dib class="cytoscape-navigatorThumbnailOverlay"></dib>
+    </div>
 
 ## Examples
 
