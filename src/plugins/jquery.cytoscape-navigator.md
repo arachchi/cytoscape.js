@@ -8,6 +8,33 @@ Navigation Panel is usually a smaller window/panel/block which is a mirror of ma
 * Display which part of main window now is visible
 * Remote navigation over main window
 
+## Using the plugin
+
+Plugin should be instantiated when graph is loaded. Plugin constructor is cytoscapeNavigator (or cyNavigator).
+
+It can be done: 
+
+* On ready callback 
+
+        $container.cy({
+                elements: {}
+                ready: function(){
+                        $container.cytoscapeNavigator()
+                } 
+        })
+* Right after graph is loaded
+
+        $container.cy({
+                elements: {}
+        }).cy(function(){
+                $container.cytoscapeNavigator()
+        })
+* Anytime when you need it (but only after graph was loaded)
+
+        $button.click(function(){
+                $container.cyNavigator()
+        })
+
 ## Examples
 
 [Examples page](http://bumbu.github.io/cytoscape.js/debug/navigator.html)
