@@ -117,6 +117,5 @@ Access plugin methods by calling cyNavigator('function name') from jQuery elemen
     $('#cytoscape').cyNavigator('resize') // call resize event to refresh navigator data
     
 List of available methods:
-* initrender
 * resize
 * destroy
