@@ -38,28 +38,23 @@
 			// Listen for events
 			this._initEventsHandling()
 
-			// Populate thumbnail with a render of the graph after it is rendered
-			this.cy.on('initrender', $.proxy(this.initrender, this))
-		}
-
-	, initrender: function () {
-			var that = this
-
-			if (this.initialized) return
-			else this.initialized = true
-
+			// Setup thumbnail
 			this._setupThumbnailSizes()
 			this._setupThumbnail()
-
 			this._updateThumbnailImage()
+
+			// Setup view
+			this._setupView()
+
+			// Thumbnail updates
 			if (this.options.thumbnailLiveFramerate === false) {
 				this._hookGraphUpdates()
 			} else {
 				this._setGraphUpdatesTimer()
 			}
 
-			// Setup view based on thumbnail
-			this._setupView()
+			// Populate thumbnail with a render of the graph after it is rendered
+			this.cy.on('initrender', $.proxy(this._checkThumbnailSizeAndUpdate, this))
 
 			// Hook graph zoom and pan
 			this.cy.on('zoom pan', $.proxy(this._setupView, this))
@@ -282,8 +277,6 @@
 	****************************/
 
 	, resize: function () {
-			this.initrender()
-
 			// Cache sizes
 			this.width = this.$element.width()
 			this.height = this.$element.height()
