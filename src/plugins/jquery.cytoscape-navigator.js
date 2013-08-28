@@ -218,11 +218,13 @@
 			if (this.eventData.viewSetup.locked)
 				return
 
+			this.$view.borderWidth = parseInt(this.$view.css('border-left-width'), 10)
+
 			var width = 0
 				, height = 0
 				, position = {left: 0, top: 0}
 				// thumbnail available sizes
-				, thumbnailBorderDouble = this.options.view.borderWidth * 2
+				, thumbnailBorderDouble = this.$view.borderWidth * 2
 				, thumbnailWidth = this.$thumbnail.width() - thumbnailBorderDouble
 				, thumbnailHeight = this.$thumbnail.height() - thumbnailBorderDouble
 				// cy vieport sizes
@@ -486,7 +488,7 @@
 	, _checkMousePosition: function (ev) {
 			var that = this
 				, _view = this.eventData.viewSetup
-				, view_border = this.options.view.borderWidth
+				, view_border = this.$view.borderWidth
 
 			// All catched events are over thumbnail
 			this.$panel.addClass('mouseover-thumbnail')
@@ -596,7 +598,7 @@
 			var that = this
 				, _data = this.eventData
 				// thumbnail available sizes
-				, thumbnailBorderDouble = this.options.view.borderWidth * 2
+				, thumbnailBorderDouble = this.$view.borderWidth * 2
 				, thumbnailWidth = _data.thumbnailSizes.width - thumbnailBorderDouble
 				, thumbnailHeight = _data.thumbnailSizes.height - thumbnailBorderDouble
 				// cy vieport zoom
@@ -681,9 +683,6 @@
 	$.fn.cytoscapeNavigator.defaults = {
 		container: false // can be a HTML or jQuery element or jQuery selector
 	, className: 'cytoscape-navigator' // set it to false or empty string to avoid setting class name
-	, view: {
-			borderWidth: 0
-		}
 	, viewLiveFramerate: 0 // set false to update graph pan only on drag end; set 0 to do it instantly; set a number (frames per second) to update not more than N times per second
 	, thumbnailEventFramerate: 10 // max thumbnail's updates per second triggered by graph updates
 	, thumbnailLiveFramerate: false // max thumbnail's updates per second. Set false to disable

@@ -280,9 +280,6 @@ $(function(){
 				$container2.cytoscapeNavigator({
 					container: "#cytoscape2Navigator"
 				, forceClassName: false
-				, view: {
-						borderWidth: 1
-					}
 				, viewLiveFramerate: false
 				, thumbnailLiveFramerate: 2
 				});
