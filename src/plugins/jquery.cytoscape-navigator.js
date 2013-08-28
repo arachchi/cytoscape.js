@@ -110,7 +110,7 @@
 			this.$thumbnailCanvasBufferContainer = $('<div/>')
 			this.$thumbnailCanvasBuffer = $('<canvas/>')
 			// Used to capture mouse events
-			this.$thumbnailOverlay = $('<dib class="cytoscape-navigatorThumbnailOverlay"/>')
+			this.$overlay = $('<dib class="cytoscape-navigatorOverlay"/>')
 
 			// Add thumbnail container to the DOM
 			this.$panel.append(this.$thumbnail)
@@ -119,7 +119,7 @@
 			// Add thumbnail canvas to the DOM
 			this.$thumbnail.append(this.$thumbnailCanvas)
 			// Add thumbnail overlay to the DOM
-			this.$panel.append(this.$thumbnailOverlay)
+			this.$panel.append(this.$overlay)
 		}
 
 	, _setupThumbnail: function () {
@@ -155,11 +155,6 @@
 			// Setup Canvas cache
 			this.$thumbnailCanvasBuffer.attr('width', this.width)
 			this.$thumbnailCanvasBuffer.attr('height', this.height)
-
-			// Setup Overlay
-			this.$thumbnailOverlay.width(_width)
-			this.$thumbnailOverlay.height(_height)
-			this.$thumbnailOverlay.css({left: _left, top: _top})
 
 			// Cache Thumbnail sizes
 			this.eventData.thumbnailSizes.width = _width
@@ -219,8 +214,6 @@
 				, thumbnailWidth = this.$thumbnail.width() - thumbnailBorderDouble
 				, thumbnailHeight = this.$thumbnail.height() - thumbnailBorderDouble
 				, cyZoom = this.cy.zoom()
-				// , cyWidth = this.width * cyZoom
-				// , cyHeight = this.height * cyZoom
 				, cyPan = {
 						x: this.cy.pan().x
 					, y: this.cy.pan().y
@@ -229,47 +222,33 @@
 				, bb_w = this.width / this.$thumbnail.zoom  // bounding box with graph's proportions
 				, bb_h = this.height / this.$thumbnail.zoom // bounding box with graph's proportions
 
-			// TODO restore condition
-			// if (cyPan.x > this.width || cyPan.x < -cyWidth || cyPan.y > this.height || cyPan.y < -cyHeight) {
-			if (false) {
-				this.$view.hide()
-			} else {
-				// Horizontal computation
-				position.left = -((cyPan.x - bb_w + bb.w)/cyZoom + bb.x1) * thumbnailWidth / bb_w
-				position.right = position.left + (thumbnailWidth / cyZoom * this.$thumbnail.zoom)
+			// Horizontal computation
+			position.left = -((cyPan.x - bb_w + bb.w)/cyZoom + bb.x1) * thumbnailWidth / bb_w
+			position.right = position.left + (thumbnailWidth / cyZoom * this.$thumbnail.zoom)
 
-				// Limit view inside thumbnails borders
-				position.left = Math.max(0, position.left)
-				position.right = Math.min(thumbnailWidth, position.right)
+			// Compute width and remove position.right
+			width = position.right - position.left
+			;// for delete
+			delete position.right
 
-				// Compute width and remove position.right
-				width = position.right - position.left
-				;// for delete
-				delete position.right
+			// Vertical computation
+			position.top = -((cyPan.y - bb_h + bb.h)/cyZoom + bb.y1) * thumbnailHeight / bb_h
+			position.bottom = position.top + (thumbnailHeight / cyZoom * this.$thumbnail.zoom)
 
-				// Vertical computation
-				position.top = -((cyPan.y - bb_h + bb.h)/cyZoom + bb.y1) * thumbnailHeight / bb_h
-				position.bottom = position.top + (thumbnailHeight / cyZoom * this.$thumbnail.zoom)
+			// Compute width and remove position.bottom
+			height = position.bottom - position.top
+			;// for delete
+			delete position.bottom
 
-				// Limit view inside thumbnails borders
-				position.top = Math.max(0, position.top)
-				position.bottom = Math.min(thumbnailHeight, position.bottom)
+			// Set computed values
+			this.$view.show().width(width).height(height).css(position)
 
-				// Compute width and remove position.bottom
-				height = position.bottom - position.top
-				;// for delete
-				delete position.bottom
-
-				// Set computed values
-				this.$view.show().width(width).height(height).css(position)
-
-				// Cache values into eventData
-				// define like this for speed and in order not to erase additional parameters
-				this.eventData.viewSetup.width = width
-				this.eventData.viewSetup.height = height
-				this.eventData.viewSetup.x = position.left
-				this.eventData.viewSetup.y = position.top
-			}
+			// Cache values into eventData
+			// define like this for speed and in order not to erase additional parameters
+			this.eventData.viewSetup.width = width
+			this.eventData.viewSetup.height = height
+			this.eventData.viewSetup.x = position.left
+			this.eventData.viewSetup.y = position.top
 		}
 
 	/****************************
@@ -328,40 +307,36 @@
 			}
 
 			// handle events and stop their propagation
-			this.$panel.on(eventsAll.join(' '), function (ev) {
-				// Delegate event handling only for Overlay
-				if (ev.target == that.$thumbnailOverlay[0]) {
+			this.$overlay.on(eventsAll.join(' '), function (ev) {
+				// Touch events
+				if (ev.type == 'touchstart') {
+					// Will count as middle of View
+					ev.offsetX = that.eventData.viewSetup.x + that.eventData.viewSetup.width / 2
+					ev.offsetY = that.eventData.viewSetup.y + that.eventData.viewSetup.height / 2
+				} else if (ev.type == 'touchmove') {
+					// Hack - we take in account only first touch
+					ev.pageX = ev.originalEvent.touches[0].pageX
+					ev.pageY = ev.originalEvent.touches[0].pageY
+				}
 
-					// Touch events
-					if (ev.type == 'touchstart') {
-						// Will count as middle of View
-						ev.offsetX = that.eventData.viewSetup.x + that.eventData.viewSetup.width / 2
-						ev.offsetY = that.eventData.viewSetup.y + that.eventData.viewSetup.height / 2
-					} else if (ev.type == 'touchmove') {
-						// Hack - we take in account only first touch
-						ev.pageX = ev.originalEvent.touches[0].pageX
-						ev.pageY = ev.originalEvent.touches[0].pageY
-					}
-
-					// Normalize offset for browsers which do not provide that value
-					if (ev.offsetX === undefined || ev.offsetY === undefined) {
-						var targetOffset = $(ev.target).offset()
-						ev.offsetX = ev.pageX - targetOffset.left
-						ev.offsetY = ev.pageY - targetOffset.top
-					}
+				// Normalize offset for browsers which do not provide that value
+				if (ev.offsetX === undefined || ev.offsetY === undefined) {
+					var targetOffset = $(ev.target).offset()
+					ev.offsetX = ev.pageX - targetOffset.left
+					ev.offsetY = ev.pageY - targetOffset.top
+				}
 
 
-					if (ev.type == 'mousedown' || ev.type == 'touchstart') {
-						that._eventMoveStart(ev)
-					} else if (ev.type == 'mousemove' || ev.type == 'touchmove') {
-						that._eventMove(ev)
-					} else if (ev.type == 'mouseup' || ev.type == 'mouseout') {
-						that._eventMoveEnd(ev)
-					} else if (ev.type == 'mousewheel' || ev.type == 'DOMMouseScroll') {
-						that._eventZoom(ev)
-					} else if (ev.type == 'mouseover') {
-						// console.log(ev)
-					}
+				if (ev.type == 'mousedown' || ev.type == 'touchstart') {
+					that._eventMoveStart(ev)
+				} else if (ev.type == 'mousemove' || ev.type == 'touchmove') {
+					that._eventMove(ev)
+				} else if (ev.type == 'mouseup' || ev.type == 'mouseout') {
+					that._eventMoveEnd(ev)
+				} else if (ev.type == 'mousewheel' || ev.type == 'DOMMouseScroll') {
+					that._eventZoom(ev)
+				} else if (ev.type == 'mouseover') {
+					// console.log(ev)
 				}
 
 				// Prevent default and propagation
@@ -426,8 +401,6 @@
 	, _eventMove: function (ev) {
 			var that = this
 				, _data = this.eventData
-				, _x = 0
-				, _y = 0
 				, thumbnailToViewScale = this.cy.zoom() / this.$thumbnail.zoom
 				, viewsMaxSizes
 
@@ -446,21 +419,13 @@
 				return;
 			}
 
-			_x = ev.offsetX - _data.hookPoint.x
-			_x = Math.max(0, _x)
-			_x = Math.min(_data.thumbnailSizes.width - _data.viewSetup.width, _x)
-
-			_y = ev.offsetY - _data.hookPoint.y
-			_y = Math.max(0, _y)
-			_y = Math.min(_data.thumbnailSizes.height - _data.viewSetup.height, _y)
+			// Update cache
+			_data.viewSetup.x = ev.offsetX - _data.hookPoint.x
+			_data.viewSetup.y = ev.offsetY - _data.hookPoint.y
 
 			// Update view position
-			this.$view.css('left', _x)
-			this.$view.css('top', _y)
-
-			// Update cache
-			_data.viewSetup.x = _x
-			_data.viewSetup.y = _y
+			this.$view.css('left', _data.viewSetup.x)
+			this.$view.css('top', _data.viewSetup.y)
 
 			// Move Cy
 			if (this.options.viewLiveFramerate !== false) {
@@ -518,10 +483,9 @@
 
 	, _eventZoom: function (ev) {
 			var zoomRate = Math.pow(10, ev.originalEvent.wheelDeltaY / 1000 || ev.originalEvent.detail / -32)
-				, overlay_offset = this.$thumbnailOverlay.offset()
 				, mouse_position = {
-						left: ev.originalEvent.pageX - overlay_offset.left
-					, top: ev.originalEvent.pageY - overlay_offset.top
+						left: ev.originalEvent.pageX
+					, top: ev.originalEvent.pageY
 					}
 
 			if (this.cy.zoomingEnabled()) {
