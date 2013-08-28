@@ -19,22 +19,31 @@ It can be done:
 * On ready callback 
 
         $container.cy({
-                elements: {}
-                ready: function(){
-                        $container.cytoscapeNavigator()
-                } 
+            elements: {}
+            ready: function(){
+                $container.cytoscapeNavigator()
+            } 
         })
 * Right after graph is loaded
 
         $container.cy({
-                elements: {}
+            elements: {}
         }).cy(function(){
-                $container.cytoscapeNavigator()
+            $container.cytoscapeNavigator()
         })
-* Anytime when you need it (but only after graph was loaded)
+* Anytime when you need it. Do it only after graph was loaded. Pass a string argument 'initrender'.
 
         $button.click(function(){
-                $container.cyNavigator()
+            $container.cyNavigator('initrender')
+        })
+
+If you want to init plugin with custom options:
+
+        $button.click(function(){
+            $container.cyNavigator({
+                viewLiveFramerate: 5
+            ,   thumbnailEventFramerate: 0
+            }).cyNavigator('initrender')
         })
         
 ### Customizing plugin
@@ -43,22 +52,15 @@ Plugin accepts custom options in form of an object. Full list of available opion
 
     $button.click(function(){
         $container.cyNavigator({
-            position: {
-                  horizontal: function(){return $container2.width()}
-                , vertical: 'top'
-            }
-            , size: {
-                  height: "45%"
-                , width: function(){return 200;}
-            }
-            , viewLiveFramerate: 5
-            , thumbnailEventFramerate: 0
+            viewLiveFramerate: 5
+        ,   thumbnailEventFramerate: 0
         })
     })
         
 ### Styling
 
 Navigator and its components (thumbnail's container, view's container) may be styled via css.
+It includes background, border, size and position. Default styles can be found in [Navigator css file](https://github.com/bumbu/cytoscape.js/blob/navigator/src/plugins/jquery.cytoscape-navigator.css).
 
 * Ovveride Navigator border and background:
 
@@ -86,73 +88,12 @@ Navigator HTML structure looks like:
 
 ## Available options
 
-### conainer 
+### container 
     container: false
     
 Can be a HTML or jQuery element or jQuery selector
 
 Used to indicate navigator HTML container. If is false then a new DOM Element is created.
-
-### className
-    className: 'cytoscape-navigator'
-    
-This class name will be added to navigator container
-    
-
-### position
-
-Used to set navigator position.
-
-Each parameter accepts following options:
-* a number (will be used as px)
-* a function (which returns a number)
-* a string which ends in _px_ 
-* a string which ends in _%_ (will be computed based on graph sizes)
-* one of the strings (only for vertical):
-  * top
-  * bottom
-  * middle
-* one of the srings (only for horizontal):
-  * left
-  * right
-  * center
-
-#### position vertical 
-    position: {
-  		vertical: 'bottom'
-    }
-    
-#### position horizontal
-    position: {
-    	horizontal: 'right'
-    }
-
-### size 
-
-Used to set navigator size.
-
-Each parameter accepts following options:
-* a number (will be used as px)
-* a function (which returns a number)
-* a string which ends in _px_ 
-* a string which ends in _%_ (will be computed based on graph sizes)
-
-#### size width 
-    size: {
-    	width: 200
-    }
-
-#### size height
-    size: {
-    	height: 150
-    }
-    
-### view 
-
-#### view borderWidth 
-	  view: {
-			borderWidth: 0
-		}
     
 ### viewLiveFramerate
     viewLiveFramerate: 0
@@ -183,6 +124,6 @@ Access plugin methods by calling cyNavigator('function name') from jQuery elemen
     $('#cytoscape').cyNavigator('resize') // call resize event to refresh navigator data
     
 List of available methods:
-* destroy
+* initrender
 * resize
-
+* destroy
