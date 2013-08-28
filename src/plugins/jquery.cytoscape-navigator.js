@@ -81,24 +81,18 @@
 				if( options.container instanceof jQuery ){
 					if( options.container.length > 0 ){
 						this.$panel = options.container.first()
-
-						// Add class name
-						this.$panel.addClass(options.className)
 					} else {
 						$.error("Container for jquery.cyNavigator is empty")
 						return
 					}
 				} else if ( $(options.container).length > 0 ) {
 					this.$panel = $(options.container).first()
-
-					// Add class name
-					this.$panel.addClass(options.className)
 				} else {
 					$.error("There is no any element matching your selector for jquery.cyNavigator")
 					return
 				}
 			} else {
-				this.$panel = $('<div class="'+options.className+'"/>')
+				this.$panel = $('<div class="cytoscape-navigator"/>')
 				this.$element.append(this.$panel)
 			}
 		}
@@ -680,7 +674,6 @@
 
 	$.fn.cytoscapeNavigator.defaults = {
 		container: false // can be a HTML or jQuery element or jQuery selector
-	, className: 'cytoscape-navigator' // set it to false or empty string to avoid setting class name
 	, viewLiveFramerate: 0 // set false to update graph pan only on drag end; set 0 to do it instantly; set a number (frames per second) to update not more than N times per second
 	, thumbnailEventFramerate: 10 // max thumbnail's updates per second triggered by graph updates
 	, thumbnailLiveFramerate: false // max thumbnail's updates per second. Set false to disable
