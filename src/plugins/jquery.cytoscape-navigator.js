@@ -121,13 +121,13 @@
 			// Used to capture mouse events
 			this.$thumbnailOverlay = $('<dib class="cytoscape-navigatorThumbnailOverlay"/>')
 
-			// Add thumbnail container to the dom
+			// Add thumbnail container to the DOM
 			this.$panel.append(this.$thumbnail)
-			// Add canvas cache and its container to the dom
+			// Add canvas cache and its container to the DOM
 			this.$thumbnailCanvasBufferContainer.appendTo(this.$panel).hide().append(this.$thumbnailCanvasBuffer)
-			// Add thumbnail canvas to the dom
+			// Add thumbnail canvas to the DOM
 			this.$thumbnail.append(this.$thumbnailCanvas)
-			// Add thumbnail overlay to the dom
+			// Add thumbnail overlay to the DOM
 			this.$panel.append(this.$thumbnailOverlay)
 		}
 
@@ -227,7 +227,6 @@
 				, thumbnailBorderDouble = this.$view.borderWidth * 2
 				, thumbnailWidth = this.$thumbnail.width() - thumbnailBorderDouble
 				, thumbnailHeight = this.$thumbnail.height() - thumbnailBorderDouble
-				// cy vieport sizes
 				, cyZoom = this.cy.zoom()
 				// , cyWidth = this.width * cyZoom
 				// , cyHeight = this.height * cyZoom
@@ -313,7 +312,7 @@
 				, 'touchend'
 				]
 
-			// Init events data storing
+			// Initial events data storing
 			this.eventData = {
 				isActive: false
 			, hookPoint: { // relative to View
@@ -478,7 +477,7 @@
 				if (this.options.viewLiveFramerate == 0) {
 					this._moveCy()
 				}
-				// trigger only once in time/framerate
+				// trigger less often than frame rate
 				else if (_data.timeout === null) {
 					_data.timeout = setTimeout($.proxy(this._moveCyClearTimeout, this), 1000/this.options.viewLiveFramerate)
 				}
@@ -490,7 +489,7 @@
 				, _view = this.eventData.viewSetup
 				, view_border = this.$view.borderWidth
 
-			// All catched events are over thumbnail
+			// All caught events are over thumbnail
 			this.$panel.addClass('mouseover-thumbnail')
 
 			if(ev.offsetX > _view.x && ev.offsetX < _view.x + view_border * 2 + _view.width
@@ -504,7 +503,7 @@
 	, _eventMoveEnd: function (ev) {
 			var _data = this.eventData
 
-			// Unlock view changing caused by cy events
+			// Unlock view changing caused by graph events
 			_data.viewSetup.locked = false
 
 			// Remove classes when mouse is outside of thumbnail
@@ -517,7 +516,7 @@
 			// Trigger one last move
 			this._eventMove(ev)
 
-			// If mode is not live then move Cy on drag end
+			// If mode is not live then move graph on drag end
 			if (this.options.viewLiveFramerate === false) {
 				this._moveCy()
 			}
@@ -567,13 +566,13 @@
 			var that = this
 				, timeout = 0 // will remain 0 if force_refresh is true
 
-			// Set thumbnail update framerate
+			// Set thumbnail update frame rate
 			!force_refresh && this.options.thumbnailEventFramerate > 0 && (timeout = ~~(1000 / this.options.thumbnailEventFramerate))
 
 			if (this._thumbUpdateTimeout === undefined || this._thumbUpdateTimeout === null) {
 				this._thumbUpdateTimeout = setTimeout(function(){
 					// TODO remove double buffering as now it doesn't help to prevent bug #313
-					// Copy scaled thumnail to buffer
+					// Copy scaled thumbnail to buffer
 					that.cy.renderTo(that.$thumbnailCanvasBuffer[0].getContext('2d'), that.$thumbnail.zoom, that.$thumbnail.pan)
 					// Copy thumbnail from buffer to visible canvas
 					// Do it in next frame
@@ -601,7 +600,6 @@
 				, thumbnailBorderDouble = this.$view.borderWidth * 2
 				, thumbnailWidth = _data.thumbnailSizes.width - thumbnailBorderDouble
 				, thumbnailHeight = _data.thumbnailSizes.height - thumbnailBorderDouble
-				// cy vieport zoom
 				, cyZoom = this.cy.zoom()
 				, bb = this.cy.elements().boundingBox()
 				, bb_w = this.width / this.$thumbnail.zoom  // bounding box with graph's proportions
