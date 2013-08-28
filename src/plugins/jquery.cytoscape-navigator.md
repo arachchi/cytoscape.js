@@ -84,7 +84,9 @@ Navigator HTML structure looks like:
 
 ## Examples
 
-[Examples page](http://bumbu.github.io/cytoscape.js/debug/navigator.html)
+[Default navigator](http://jsbin.com/EbIT/latest/edit)
+
+[Navigator with custom options and late initialisation](http://jsbin.com/EMELiQI/1/edit)
 
 ## Available options
 
