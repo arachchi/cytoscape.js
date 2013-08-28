@@ -107,19 +107,8 @@
 			var options = this.options
 
 			// Cache sizes
-			options.size._width = this.convertSizeToNumber(options.size.width, this.width)
-			options.size._height = this.convertSizeToNumber(options.size.height, this.height)
-
-			// Set sizes
-			this.$panel.width(options.size._width)
-			this.$panel.height(options.size._height)
-
-			// Cache position
-			options.position._horizontal = this.convertPositionToNumber(options.position.horizontal, this.width, options.size._width)
-			options.position._vertical = this.convertPositionToNumber(options.position.vertical, this.height, options.size._height)
-
-			// Set positions
-			this.$panel.css({left: options.position._horizontal, top: options.position._vertical})
+			this.$panel._width = this.$panel.width()
+			this.$panel._height = this.$panel.height()
 		}
 
 	, _initThumbnail: function () {
@@ -288,55 +277,6 @@
 				this.eventData.viewSetup.height = height
 				this.eventData.viewSetup.x = position.left
 				this.eventData.viewSetup.y = position.top
-			}
-		}
-
-	/****************************
-		Converter functions
-	****************************/
-
-		// reference is used when computing from %
-		// element_size is used for string positions (center, right)
-	, convertPositionToNumber: function (position, reference, element_size) {
-			if (position == "top" || position == "left") {
-				return 0
-			} else if (position == "bottom" || position == "right") {
-				return reference - element_size
-			} else if (position == "middle" || position == "center") {
-				return ~~((reference - element_size)/2)
-			} else {
-				return this.convertSizeToNumber(position, reference)
-			}
-		}
-
-		// reference is used when computing from %
-
-	, convertSizeToNumber: function (size, reference) {
-			// if function
-			if (Object.prototype.toString.call(size) === '[object Function]') {
-				return this.convertSizeToNumber(size())
-			}
-			// if string
-			else if(Object.prototype.toString.call(size) == '[object String]') {
-				if (~size.indexOf("%")) {
-					return this.convertSizeToNumber(parseFloat(size.substr(0, size.indexOf("%"))) * reference / 100)
-				} else {
-					return this.convertSizeToNumber(parseInt(size, 10))
-				}
-			}
-			// if number
-			else if(!isNaN(parseInt(size, 10)) && isFinite(size)) {
-				if (parseInt(size, 10) < 0) {
-					$.error("The size shouldn't be negative")
-					return 0
-				} else {
-					return parseInt(size, 10)
-				}
-			}
-			// error
-			else {
-				$.error("The size " + size + " can't be converted to a usable number")
-				return 0
 			}
 		}
 
@@ -741,14 +681,6 @@
 	$.fn.cytoscapeNavigator.defaults = {
 		container: false // can be a HTML or jQuery element or jQuery selector
 	, className: 'cytoscape-navigator' // set it to false or empty string to avoid setting class name
-	, position: {
-			vertical: 'bottom' // can be 'top', 'bottom', 'middle', a number (will be used as px), a function (which returns a number) or a string which contains a number +px or +%. Percent will be computed based on container size.
-		, horizontal: 'right' // can be 'left', 'right', 'center', a number (will be used as px), a function (which returns a number) or a string which contains a number +px or +%. Percent will be computed based on container size.
-		}
-	, size: {
-			width: 200 // can be a number (will be used as px), a function (which returns a number) or a string which contains a number +px or +%. Percent will be computed based on container size.
-		, height: 150 // can be a number (will be used as px), a function (which returns a number) or a string which contains a number +px or +%. Percent will be computed based on container size.
-		}
 	, view: {
 			borderWidth: 0
 		}

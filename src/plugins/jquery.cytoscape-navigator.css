@@ -1,8 +1,12 @@
 .cytoscape-navigator{
 	position: absolute;
 	border: 1px solid #000;
-	background: #ccc;
+	background: #eee;
 	z-index: 99999;
+	width: 200px;
+	height: 150px;
+	bottom: 0;
+	right: 0;
 }
 
 .cytoscape-navigatorThumbnail{
