@@ -277,12 +277,16 @@ $(function(){
 				   });
 				}
 			}).cy(function () {
-				$container2.cytoscapeNavigator({
-					container: "#cytoscape2Navigator"
-				, viewLiveFramerate: false
-				, thumbnailLiveFramerate: 2
-				});
+
 			});
+
+		setTimeout(function(){
+			$container2.cytoscapeNavigator({
+				container: "#cytoscape2Navigator"
+			, viewLiveFramerate: false
+			, thumbnailLiveFramerate: 2
+			}).cytoscapeNavigator('initrender');
+		}, 300)
 
 		$container2.cytoscape('get').maxZoom(5)
 		$container2.cytoscape('get').minZoom(0.1)

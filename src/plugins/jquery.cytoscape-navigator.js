@@ -39,31 +39,33 @@
 			this._initEventsHandling()
 
 			// Populate thumbnail with a render of the graph after it is rendered
-			this.cy.on('initrender', function () {
-				// Setup thumbnail based on bounding box. First need to call ThumbnailSizes
-				that._setupThumbnailSizes()
-				that._setupThumbnail()
+			this.cy.on('initrender', $.proxy(this.initrender, this))
+		}
 
-				that._updateThumbnailImage()
-				if (that.options.thumbnailLiveFramerate === false) {
-					that._hookGraphUpdates()
-				} else {
-					that._setGraphUpdatesTimer()
-				}
+	, initrender: function () {
+			var that = this
 
-				// Setup view based on thumbnail
-				that._setupView()
+			if (this.initialized) return
+			else this.initialized = true
 
-				// Hook graph zoom and pan
-				that.cy.on('zoom pan', function () {
-					that._setupView()
-				})
+			this._setupThumbnailSizes()
+			this._setupThumbnail()
 
-				// Hook element resize
-				that.$element.on('resize', function () {
-					that.resize()
-				})
-			})
+			this._updateThumbnailImage()
+			if (this.options.thumbnailLiveFramerate === false) {
+				this._hookGraphUpdates()
+			} else {
+				this._setGraphUpdatesTimer()
+			}
+
+			// Setup view based on thumbnail
+			this._setupView()
+
+			// Hook graph zoom and pan
+			this.cy.on('zoom pan', $.proxy(this._setupView, this))
+
+			// Hook element resize
+			this.$element.on('resize', $.proxy(this.resize, this))
 		}
 
 	, destroy: function () {
@@ -280,12 +282,14 @@
 	****************************/
 
 	, resize: function () {
+			this.initrender()
+
 			// Cache sizes
 			this.width = this.$element.width()
 			this.height = this.$element.height()
 
 			this._setupPanel()
-			this._setupThumbnail()
+			this._checkThumbnailSizeAndUpdate()
 			this._setupView()
 		}
 
