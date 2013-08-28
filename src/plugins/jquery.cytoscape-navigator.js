@@ -54,7 +54,7 @@
 				// Setup view based on thumbnail
 				that._setupView()
 
-				// Hook cy zoom and pan
+				// Hook graph zoom and pan
 				that.cy.on('zoom pan', function () {
 					that._setupView()
 				})
@@ -364,7 +364,7 @@
 				, 'mouseout'
 				, 'mousemove'
 				, 'mousewheel'
-				, 'DOMMouseScroll' // Mozzila specific event
+				, 'DOMMouseScroll' // Mozilla specific event
 				// Touch events
 				, 'touchstart'
 				, 'touchmove'
@@ -389,7 +389,7 @@
 				, height: 0
 				, locked: false
 				}
-			, timeout: null // used to keep stable framerate
+			, timeout: null // used to keep stable frame rate
 			, lastMoveStartTime: null
 			, thumbnailUpdateLock: false
 			, thumbnailUpdateDirty: false
@@ -433,7 +433,7 @@
 				}
 
 				// Prevent default and propagation
-				// Don't use peventPropagation as it cancels sometimes moure handler
+				// Don't use peventPropagation as it breaks mouse events
 				return false;
 			})
 		}
@@ -753,9 +753,9 @@
 			borderWidth: 0
 		}
 	, viewLiveFramerate: 0 // set false to update graph pan only on drag end; set 0 to do it instantly; set a number (frames per second) to update not more than N times per second
-	, thumbnailEventFramerate: 10 // max thumbnail update's frames per second triggered by graph updates
-	, thumbnailLiveFramerate: false // max thumbnail update's frames per second. Set false to disable
-	, dblClickDelay: 200 // miliseconds
+	, thumbnailEventFramerate: 10 // max thumbnail's updates per second triggered by graph updates
+	, thumbnailLiveFramerate: false // max thumbnail's updates per second. Set false to disable
+	, dblClickDelay: 200 // milliseconds
 	}
 
 	$.fn.cyNavigator = $.fn.cytoscapeNavigator
