@@ -285,7 +285,7 @@ $(function(){
 				container: "#cytoscape2Navigator"
 			, viewLiveFramerate: false
 			, thumbnailLiveFramerate: 2
-			}).cytoscapeNavigator('initrender');
+			});
 		}, 300)
 
 		$container2.cytoscape('get').maxZoom(5)
