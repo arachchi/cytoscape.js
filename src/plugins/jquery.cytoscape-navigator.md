@@ -23,27 +23,18 @@ It can be done:
         }).cy(function(){
             $container.cytoscapeNavigator()
         })
-* On ready callback. Pass a string argument 'initrender'.
+* On ready callback.
 
         $container.cy({
             elements: {}
             ready: function(){
-                $container.cytoscapeNavigator('initrender')
+                $container.cytoscapeNavigator()
             } 
         })
-* Anytime when you need it. Do it only after graph was loaded. 
+* Anytime when you need it. Do it only after graph was initialised. 
 
         $button.click(function(){
-            $container.cyNavigator('initrender')
-        })
-
-If you want to init plugin with custom options:
-
-        $button.click(function(){
-            $container.cyNavigator({
-                viewLiveFramerate: 5
-            ,   thumbnailEventFramerate: 0
-            }).cyNavigator('initrender')
+            $container.cyNavigator()
         })
         
 ### Customizing plugin
