@@ -16,14 +16,6 @@ Plugin should be instantiated when graph is loaded. Plugin constructor is cytosc
 
 It can be done: 
 
-* On ready callback 
-
-        $container.cy({
-            elements: {}
-            ready: function(){
-                $container.cytoscapeNavigator()
-            } 
-        })
 * Right after graph is loaded
 
         $container.cy({
@@ -31,7 +23,15 @@ It can be done:
         }).cy(function(){
             $container.cytoscapeNavigator()
         })
-* Anytime when you need it. Do it only after graph was loaded. Pass a string argument 'initrender'.
+* On ready callback. Pass a string argument 'initrender'.
+
+        $container.cy({
+            elements: {}
+            ready: function(){
+                $container.cytoscapeNavigator('initrender')
+            } 
+        })
+* Anytime when you need it. Do it only after graph was loaded. 
 
         $button.click(function(){
             $container.cyNavigator('initrender')
