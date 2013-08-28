@@ -38,8 +38,8 @@
 			// Listen for events
 			this._initEventsHandling()
 
-			// Populate thumbnail with a render of the graph when cy is done
-			this.cy.on('done', function () {
+			// Populate thumbnail with a render of the graph after it is rendered
+			this.cy.on('initrender', function () {
 				// Setup thumbnail based on bounding box. First need to call ThumbnailSizes
 				that._setupThumbnailSizes()
 				that._setupThumbnail()
@@ -63,11 +63,6 @@
 				that.$element.on('resize', function () {
 					that.resize()
 				})
-
-				setTimeout(function(){
-					// recall as fonts may still not render
-					that._checkThumbnailSizeAndUpdate()
-				},1)
 			})
 		}
 
