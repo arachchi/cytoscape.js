@@ -213,7 +213,7 @@
 		 */
 	, _initOverlay: function () {
 			// Used to capture mouse events
-			this.$overlay = $('<dib class="cytoscape-navigatorOverlay"/>')
+			this.$overlay = $('<div class="cytoscape-navigatorOverlay"/>')
 
 			// Add overlay to the DOM
 			this.$panel.append(this.$overlay)
