@@ -28,20 +28,11 @@
 			// Cache bounding box
 			this.boundingBox = this.cy.elements().boundingBox()
 
-			// Panel
+			// Init components
 			this._initPanel()
-
-			// Thumbnail
 			this._initThumbnail()
-
-			// View
 			this._initView()
-
-			// // Overlay
-			// this._initOverlay()
-
-			// // Listen for events
-			// this._initEventsHandling()
+			this._initOverlay()
 
 			// // Hook element resize
 			// this.$element.on('resize', $.proxy(this.resize, this))
@@ -168,8 +159,8 @@
 		 * h {number} height
 		 * x {number}
 		 * y {number}
-		 * locked {boolean}
 		 * borderWidth {number}
+		 * locked {boolean}
 		 */
 	, _initView: function () {
 			var that = this
@@ -212,12 +203,26 @@
 				})
 		}
 
+		/*
+		 * Used inner attributes
+		 *
+		 * timeout {number} used to keep stable frame rate
+		 * lastMoveStartTime {number}
+		 * inMovement {boolean}
+		 * hookPoint {object} {x: 0, y: 0}
+		 */
 	, _initOverlay: function () {
 			// Used to capture mouse events
 			this.$overlay = $('<dib class="cytoscape-navigatorOverlay"/>')
 
 			// Add overlay to the DOM
 			this.$panel.append(this.$overlay)
+
+			// Init some attributes
+			this.$overlay.hookPoint = {x: 0, y: 0}
+
+			// Listen for events
+			this._initEventsHandling()
 		}
 
 	/****************************
@@ -251,42 +256,14 @@
 				, 'touchend'
 				]
 
-			// Initial events data storing
-			this.eventData = {
-				isActive: false
-			, hookPoint: { // relative to View
-					x: 0
-				, y: 0
-				}
-			, thumbnailSizes: {
-					width: 0
-				, height: 0
-				, zoom: 1
-				, pan: {
-						x: 0
-					, y: 0
-					}
-				}
-			, viewSetup: {
-					x: 0
-				, y: 0
-				, width: 0
-				, height: 0
-				, locked: false
-				}
-			, timeout: null // used to keep stable frame rate
-			, lastMoveStartTime: null
-			, thumbnailUpdateLock: false
-			, thumbnailUpdateDirty: false
-			}
-
 			// handle events and stop their propagation
 			this.$overlay.on(eventsAll.join(' '), function (ev) {
 				// Touch events
+				// TODO test/review
 				if (ev.type == 'touchstart') {
 					// Will count as middle of View
-					ev.offsetX = that.eventData.viewSetup.x + that.eventData.viewSetup.width / 2
-					ev.offsetY = that.eventData.viewSetup.y + that.eventData.viewSetup.height / 2
+					ev.offsetX = that.$view.x + that.$view.w / 2
+					ev.offsetY = that.$view.y + that.$view.h / 2
 				} else if (ev.type == 'touchmove') {
 					// Hack - we take in account only first touch
 					ev.pageX = ev.originalEvent.touches[0].pageX
@@ -299,7 +276,6 @@
 					ev.offsetX = ev.pageX - targetOffset.left
 					ev.offsetY = ev.pageY - targetOffset.top
 				}
-
 
 				if (ev.type == 'mousedown' || ev.type == 'touchstart') {
 					that._eventMoveStart(ev)
@@ -320,51 +296,49 @@
 		}
 
 	, _eventMoveStart: function (ev) {
-			var _data = this.eventData
-				, now = new Date().getTime()
+			var now = new Date().getTime()
 
 			// Check if it was double click
-			if (_data.lastMoveStartTime !== null
-				&& _data.lastMoveStartTime + this.options.dblClickDelay > now) {
+			if (this.$overlay.lastMoveStartTime
+				&& this.$overlay.lastMoveStartTime + this.options.dblClickDelay > now) {
 				// Reset lastMoveStartTime
-				_data.lastMoveStartTime = null
+				this.$overlay.lastMoveStartTime = 0
 				// Enable View in order to move it to the center
-				_data.isActive = true
+				this.$overlay.inMovement = true
 
 				// Set hook point as View center
-				_data.hookPoint.x = _data.viewSetup.width / 2
-				_data.hookPoint.y = _data.viewSetup.height / 2
+				this.$overlay.hookPoint.x = this.$view.w / 2
+				this.$overlay.hookPoint.y = this.$view.h / 2
 
 				// Move View to start point
 				this._eventMove({
-					offsetX: _data.thumbnailSizes.width / 2
-				, offsetY: _data.thumbnailSizes.height / 2
+					offsetX: this.$panel.w / 2
+				, offsetY: this.$panel.h / 2
 				})
 
 				// View should be inactive as we don't want to move it right after double click
-				_data.isActive = false
-
+				this.$overlay.inMovement = false
 			}
-			// This is single click
+			// This is a single click
 			// Take care as single click happens before double click 2 times
 			else {
-				_data.lastMoveStartTime = now
-				_data.isActive = true
+				this.$overlay.lastMoveStartTime = now
+				this.$overlay.inMovement = true
 				// Lock view moving caused by cy events
-				_data.viewSetup.locked = true
+				this.$view.locked = true
 
 				// if event started in View
-				if (ev.offsetX >= _data.viewSetup.x && ev.offsetX <= _data.viewSetup.x + _data.viewSetup.width
-					&& ev.offsetY >= _data.viewSetup.y && ev.offsetY <= _data.viewSetup.y + _data.viewSetup.height
+				if (ev.offsetX >= this.$view.x && ev.offsetX <= this.$view.x + this.$view.w
+					&& ev.offsetY >= this.$view.y && ev.offsetY <= this.$view.y + this.$view.h
 				) {
-					_data.hookPoint.x = ev.offsetX - _data.viewSetup.x
-					_data.hookPoint.y = ev.offsetY - _data.viewSetup.y
+					this.$overlay.hookPoint.x = ev.offsetX - this.$view.x
+					this.$overlay.hookPoint.y = ev.offsetY - this.$view.y
 				}
 				// if event started in Thumbnail (outside of View)
 				else {
 					// Set hook point as View center
-					_data.hookPoint.x = _data.viewSetup.width / 2
-					_data.hookPoint.y = _data.viewSetup.height / 2
+					this.$overlay.hookPoint.x = this.$view.w / 2
+					this.$overlay.hookPoint.y = this.$view.h / 2
 
 					// Move View to start point
 					this._eventMove(ev)
@@ -374,32 +348,22 @@
 
 	, _eventMove: function (ev) {
 			var that = this
-				, _data = this.eventData
-				, thumbnailToViewScale = this.cy.zoom() / this.$thumbnail.zoom
-				, viewsMaxSizes
 
-			if (thumbnailToViewScale > 1)
-				viewsMaxSizes = {
-					width: _data.thumbnailSizes.width / thumbnailToViewScale
-				,	height: _data.thumbnailSizes.height / thumbnailToViewScale
-				}
-			else
-				viewsMaxSizes = _data.viewSetup
-
-			this._checkMousePosition(ev)
+			// TODO restore later
+			//this._checkMousePosition(ev)
 
 			// break if it is useless event
-			if (_data.isActive === false) {
+			if (!this.$overlay.inMovement) {
 				return;
 			}
 
 			// Update cache
-			_data.viewSetup.x = ev.offsetX - _data.hookPoint.x
-			_data.viewSetup.y = ev.offsetY - _data.hookPoint.y
+			this.$view.x = ev.offsetX - this.$overlay.hookPoint.x
+			this.$view.y = ev.offsetY - this.$overlay.hookPoint.y
 
 			// Update view position
-			this.$view.css('left', _data.viewSetup.x)
-			this.$view.css('top', _data.viewSetup.y)
+			this.$view.css('left', this.$view.x)
+			this.$view.css('top', this.$view.y)
 
 			// Move Cy
 			if (this.options.viewLiveFramerate !== false) {
@@ -408,8 +372,12 @@
 					this._moveCy()
 				}
 				// trigger less often than frame rate
-				else if (_data.timeout === null) {
-					_data.timeout = setTimeout($.proxy(this._moveCyClearTimeout, this), 1000/this.options.viewLiveFramerate)
+				else if (!this.$overlay.timeout) {
+					// Set a timeout for graph movement
+					this.$overlay.timeout = setTimeout(function () {
+						that._moveCy()
+						that.$overlay.timeout = false
+					}, 1000/this.options.viewLiveFramerate)
 				}
 			}
 		}
@@ -431,15 +399,13 @@
 		}
 
 	, _eventMoveEnd: function (ev) {
-			var _data = this.eventData
-
 			// Unlock view changing caused by graph events
-			_data.viewSetup.locked = false
+			this.$view.locked = false
 
 			// Remove classes when mouse is outside of thumbnail
 			this.$panel.removeClass('mouseover-thumbnail mouseover-view')
 
-			if (_data.isActive === false) {
+			if (!this.$overlay.inMovement) {
 				return;
 			}
 
@@ -451,8 +417,8 @@
 				this._moveCy()
 			}
 
-			// State
-			_data.isActive = false
+			// Stop movement permission
+			this.$overlay.inMovement = false
 		}
 
 	, _eventZoom: function (ev) {
@@ -465,11 +431,6 @@
 			if (this.cy.zoomingEnabled()) {
 				this._zoomCy(zoomRate, mouse_position)
 			}
-		}
-
-	, _moveCyClearTimeout: function () {
-			this._moveCy()
-			this.eventData.timeout = null
 		}
 
 	, _hookGraphUpdates: function () {
@@ -487,7 +448,7 @@
 						}, delay)
 					}
 
-			// Init continuous update
+			// Init infinite loop
 			updateFunction()
 		}
 
@@ -516,27 +477,10 @@
 	****************************/
 
 	, _moveCy: function () {
-			var that = this
-				, _data = this.eventData
-				// thumbnail available sizes
-				, thumbnailBorderDouble = this.$view.borderWidth * 2
-				, thumbnailWidth = _data.thumbnailSizes.width - thumbnailBorderDouble
-				, thumbnailHeight = _data.thumbnailSizes.height - thumbnailBorderDouble
-				, cyZoom = this.cy.zoom()
-				, bb = this.cy.elements().boundingBox()
-				, bb_w = this.width / this.$thumbnail.zoom  // bounding box with graph's proportions
-				, bb_h = this.height / this.$thumbnail.zoom // bounding box with graph's proportions
-
 			this.cy.pan({
-				x: -(_data.viewSetup.x / thumbnailWidth * bb_w + bb.x1) * cyZoom + (bb_w - bb.w)
-			, y: -(_data.viewSetup.y / thumbnailHeight * bb_h + bb.y1) * cyZoom + (bb_h - bb.h)
+				x: -(this.$view.x + this.$view.borderLeft - this.$thumbnail.pan.x) * this.width / this.$view.w
+			, y: -(this.$view.y + this.$view.borderLeft - this.$thumbnail.pan.y) * this.height / this.$view.h
 			})
-			// console.log(_data.viewSetup.x, this.width, thumbnailWidth, _data.viewSetup.x * this.width / this.$panel._width)
-			// console.log(this.$thumbnail.pan)
-			// this.cy.pan({
-			// 	x: -(_data.viewSetup.x * this.width / _data.viewSetup.width + bb.x1)
-			// , y: -(_data.viewSetup.y * this.height / _data.viewSetup.height + bb.y1)
-			// })
 		}
 
 	/**
