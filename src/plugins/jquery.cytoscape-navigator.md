@@ -66,11 +66,9 @@ It includes background, border, size and position. Default styles can be found i
 Navigator HTML structure looks like:
 
     <div class="cytoscape-navigator">
-        <dib class="cytoscape-navigatorThumbnail">
-            <canvas></canvas>
-            <div class="cytoscape-navigatorView"></div>
-        </dib>
-        <dib class="cytoscape-navigatorThumbnailOverlay"></dib>
+      <canvas></canvas>
+      <div class="cytoscape-navigatorView"></div>
+      <dib class="cytoscape-navigatorOverlay"></dib>
     </div>
 
 ## Examples
