@@ -56,9 +56,12 @@ It includes background, border, size and position. Default styles can be found i
 * Ovveride Navigator border and background:
 
         .cytoscape-navigator{ border: 2px solid red; background: blue; }
-* Ovveride thumbnail's container when mouse is over thumbnail
+* Add border to View container:
 
-        .cytoscape-navigator.mouseover-thumbnail .cytoscape-navigatorThumbnail{ background: yellow; }
+        .cytoscape-navigator .cytoscape-navigatorView{ border: 5px solid red; border-radius: 3px; }
+* Ovveride overlay container when mouse is over Navigator
+
+        .cytoscape-navigator:hover .cytoscape-navigatorOverlay{ background: yellow; }
 * Ovveride view's container when mouse is over view
 
         .cytoscape-navigator.mouseover-view .cytoscape-navigatorView{ background: rgba(0,255,0,0.5); }
