@@ -197,11 +197,11 @@
 
 			// Horizontal computation
 			this.$view.w = this.width / cyZoom * this.$thumbnail.zoom
-			this.$view.x = -cyPan.x * this.$view.w / this.width + this.$thumbnail.pan.x
+			this.$view.x = -cyPan.x * this.$view.w / this.width + this.$thumbnail.pan.x - this.$view.borderWidth
 
 			// Vertical computation
 			this.$view.h = this.height / cyZoom * this.$thumbnail.zoom
-			this.$view.y = -cyPan.y * this.$view.h / this.height + this.$thumbnail.pan.y
+			this.$view.y = -cyPan.y * this.$view.h / this.height + this.$thumbnail.pan.y - this.$view.borderWidth
 
 			// CSS view
 			this.$view
