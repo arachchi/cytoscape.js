@@ -8,5 +8,5 @@ label { position: absolute; margin-top: -0.25em; font-size: 0.65em; margin-left:
 #cytoscape .cytoscape-navigatorView { background: #B7E1ED; opacity: 0.5; }
 #cytoscape2Navigator { position: absolute; border: 2px solid #ccc; background: #B7E1ED; top: -1px; bottom: auto; right: -205px; height: 300px;}
 #cytoscape2Navigator .cytoscape-navigatorView { border: 5px solid red; border-radius: 3px; background: none; }
-#cytoscape2Navigator.mouseover-thumbnail .cytoscape-navigatorThumbnail { background: #eee; }
+#cytoscape2Navigator:hover .cytoscape-navigatorOverlay { background: rgba(0,128,128,0.1); }
 #cytoscape2Navigator.mouseover-view .cytoscape-navigatorView { background: rgba(255,0,0,0.5); }

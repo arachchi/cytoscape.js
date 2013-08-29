@@ -168,9 +168,11 @@
 			this.$view = $('<div class="cytoscape-navigatorView"/>')
 			this.$panel.append(this.$view)
 
-			// Compute some values
-			this.$view.borderLeft = parseInt(this.$view.css('border-left-width'), 10)
+			// Compute borders
 			this.$view.borderTop = parseInt(this.$view.css('border-top-width'), 10)
+			this.$view.borderRight = parseInt(this.$view.css('border-right-width'), 10)
+			this.$view.borderBottom = parseInt(this.$view.css('border-bottom-width'), 10)
+			this.$view.borderLeft = parseInt(this.$view.css('border-left-width'), 10)
 
 			this._setupView()
 
@@ -349,8 +351,7 @@
 	, _eventMove: function (ev) {
 			var that = this
 
-			// TODO restore later
-			//this._checkMousePosition(ev)
+			this._checkMousePosition(ev)
 
 			// break if it is useless event
 			if (!this.$overlay.inMovement) {
@@ -383,15 +384,12 @@
 		}
 
 	, _checkMousePosition: function (ev) {
-			var that = this
-				, _view = this.eventData.viewSetup
-				, view_border = this.$view.borderWidth
+			var borderHorizontal = this.$view.borderLeft + this.$view.borderRight
+				, borderVertical = this.$view.borderTop + this.$view.borderBottom
 
-			// All caught events are over thumbnail
-			this.$panel.addClass('mouseover-thumbnail')
-
-			if(ev.offsetX > _view.x && ev.offsetX < _view.x + view_border * 2 + _view.width
-				&& ev.offsetY > _view.y && ev.offsetY < _view.y + view_border * 2 + _view.height) {
+			// If mouse in over View
+			if(ev.offsetX > this.$view.x && ev.offsetX < this.$view.x + borderHorizontal + this.$view.w
+				&& ev.offsetY > this.$view.y && ev.offsetY < this.$view.y + borderVertical + this.$view.h) {
 				this.$panel.addClass('mouseover-view')
 			} else {
 				this.$panel.removeClass('mouseover-view')
@@ -402,8 +400,8 @@
 			// Unlock view changing caused by graph events
 			this.$view.locked = false
 
-			// Remove classes when mouse is outside of thumbnail
-			this.$panel.removeClass('mouseover-thumbnail mouseover-view')
+			// Remove class when mouse is not over Navigator
+			this.$panel.removeClass('mouseover-view')
 
 			if (!this.$overlay.inMovement) {
 				return;
