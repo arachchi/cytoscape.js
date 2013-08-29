@@ -261,8 +261,7 @@
 			// handle events and stop their propagation
 			this.$overlay.on(eventsAll.join(' '), function (ev) {
 				// Touch events
-				// TODO test/review
-				if (ev.type == 'touchstart') {
+				if (ev.type == 'touchstart' || ev.type == 'touchend') {
 					// Will count as middle of View
 					ev.offsetX = that.$view.x + that.$view.w / 2
 					ev.offsetY = that.$view.y + that.$view.h / 2
@@ -283,7 +282,7 @@
 					that._eventMoveStart(ev)
 				} else if (ev.type == 'mousemove' || ev.type == 'touchmove') {
 					that._eventMove(ev)
-				} else if (ev.type == 'mouseup' || ev.type == 'mouseout') {
+				} else if (ev.type == 'mouseup' || ev.type == 'mouseout' || ev.type == 'touchend') {
 					that._eventMoveEnd(ev)
 				} else if (ev.type == 'mousewheel' || ev.type == 'DOMMouseScroll') {
 					that._eventZoom(ev)
