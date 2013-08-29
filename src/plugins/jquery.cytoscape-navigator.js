@@ -178,7 +178,8 @@
 			this.$panel.append(this.$view)
 
 			// Compute some values
-			this.$view.borderWidth = parseInt(this.$view.css('border-left-width'), 10)
+			this.$view.borderLeft = parseInt(this.$view.css('border-left-width'), 10)
+			this.$view.borderTop = parseInt(this.$view.css('border-top-width'), 10)
 
 			this._setupView()
 
@@ -197,11 +198,11 @@
 
 			// Horizontal computation
 			this.$view.w = this.width / cyZoom * this.$thumbnail.zoom
-			this.$view.x = -cyPan.x * this.$view.w / this.width + this.$thumbnail.pan.x - this.$view.borderWidth
+			this.$view.x = -cyPan.x * this.$view.w / this.width + this.$thumbnail.pan.x - this.$view.borderLeft
 
 			// Vertical computation
 			this.$view.h = this.height / cyZoom * this.$thumbnail.zoom
-			this.$view.y = -cyPan.y * this.$view.h / this.height + this.$thumbnail.pan.y - this.$view.borderWidth
+			this.$view.y = -cyPan.y * this.$view.h / this.height + this.$thumbnail.pan.y - this.$view.borderTop
 
 			// CSS view
 			this.$view
