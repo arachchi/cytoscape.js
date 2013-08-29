@@ -191,10 +191,8 @@
 			if (this.$view.locked)
 				return
 
-			var position = {left: 0, top: 0}
-				, cyZoom = this.cy.zoom()
+			var cyZoom = this.cy.zoom()
 				, cyPan = this.cy.pan()
-				, bb = this.boundingBox
 
 			// Horizontal computation
 			this.$view.w = this.width / cyZoom * this.$thumbnail.zoom
