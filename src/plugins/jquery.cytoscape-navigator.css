@@ -1,7 +1,7 @@
 .cytoscape-navigator{
 	position: absolute;
 	border: 1px solid #000;
-	background: #eee;
+	background: #fff;
 	z-index: 99999;
 	width: 200px;
 	height: 150px;
@@ -10,30 +10,13 @@
 	overflow: hidden;
 }
 
-.cytoscape-navigatorThumbnail{
-	position: absolute;
-	top: 0;
-	left: 0;
-	background: #fff;
-	z-index: 100;
-}
-
-.cytoscape-navigatorThumbnail canvas{
+.cytoscape-navigator > canvas{
 	position: absolute;
 	top: 0;
 	left: 0;
 	width: 100%;
 	height: 100%;
 	z-index: 101;
-}
-
-.cytoscape-navigatorOverlay{
-	position: absolute;
-	top: 0;
-	right: 0;
-	bottom: 0;
-	left: 0;
-	z-index: 103;
 }
 
 .cytoscape-navigatorView{
@@ -46,4 +29,13 @@
 	opacity: 0.50;
 	-ms-filter:"progid:DXImageTransform.Microsoft.Alpha"(Opacity=50);
 	z-index: 102;
+}
+
+.cytoscape-navigatorOverlay{
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	z-index: 103;
 }

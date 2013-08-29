@@ -25,26 +25,20 @@
 			this.width = this.$element.width()
 			this.height = this.$element.height()
 
+			// Cache bounding box
+			this.boundingBox = this.cy.elements().boundingBox()
+
 			// Panel
 			this._initPanel()
 			this._setupPanel()
 
 			// Thumbnail
 			this._initThumbnail()
-
-			// View
-			this._initView()
-
-			// Listen for events
-			this._initEventsHandling()
-
-			// Setup thumbnail
 			this._setupThumbnailSizes()
 			this._setupThumbnail()
-			this._updateThumbnailImage()
 
-			// Setup view
-			this._setupView()
+			// Repopulate thumbnail after graph render
+			this.cy.on('initrender', $.proxy(this._checkThumbnailSizesAndUpdate, this))
 
 			// Thumbnail updates
 			if (this.options.thumbnailLiveFramerate === false) {
@@ -53,14 +47,31 @@
 				this._setGraphUpdatesTimer()
 			}
 
-			// Populate thumbnail with a render of the graph after it is rendered
-			this.cy.on('initrender', $.proxy(this._checkThumbnailSizeAndUpdate, this))
 
-			// Hook graph zoom and pan
-			this.cy.on('zoom pan', $.proxy(this._setupView, this))
+			// // View
+			// this._initView()
 
-			// Hook element resize
-			this.$element.on('resize', $.proxy(this.resize, this))
+			// // Overlay
+			// this._initOverlay()
+
+			// // Listen for events
+			// this._initEventsHandling()
+
+			// // Setup view
+			// this._setupView()
+
+			// // Thumbnail updates
+			// if (this.options.thumbnailLiveFramerate === false) {
+			// 	this._hookGraphUpdates()
+			// } else {
+			// 	this._setGraphUpdatesTimer()
+			// }
+
+			// // Hook graph zoom and pan
+			// this.cy.on('zoom pan', $.proxy(this._setupView, this))
+
+			// // Hook element resize
+			// this.$element.on('resize', $.proxy(this.resize, this))
 		}
 
 	, destroy: function () {
@@ -71,6 +82,12 @@
 		Navigator elements functions
 	****************************/
 
+		/*
+		 * Used inner attributes
+		 *
+		 * _width {number}
+		 * _height {number}
+		 */
 	, _initPanel: function () {
 			var options = this.options
 
@@ -102,83 +119,45 @@
 			this.$panel._height = this.$panel.height()
 		}
 
+		/*
+		 * Used inner attributes
+		 *
+		 * zoom {number}
+		 * pan {object} - {x: 0, y: 0}
+		 */
 	, _initThumbnail: function () {
-			this.$thumbnail = $('<dib class="cytoscape-navigatorThumbnail"/>')
 			// Create thumbnail
-			this.$thumbnailCanvas = $('<canvas/>')
-			// Create thumbnail cache level
-			this.$thumbnailCanvasBufferContainer = $('<div/>')
-			this.$thumbnailCanvasBuffer = $('<canvas/>')
-			// Used to capture mouse events
-			this.$overlay = $('<dib class="cytoscape-navigatorOverlay"/>')
+			this.$thumbnail = $('<canvas/>')
 
-			// Add thumbnail container to the DOM
-			this.$panel.append(this.$thumbnail)
-			// Add canvas cache and its container to the DOM
-			this.$thumbnailCanvasBufferContainer.appendTo(this.$panel).hide().append(this.$thumbnailCanvasBuffer)
 			// Add thumbnail canvas to the DOM
-			this.$thumbnail.append(this.$thumbnailCanvas)
-			// Add thumbnail overlay to the DOM
-			this.$panel.append(this.$overlay)
+			this.$panel.append(this.$thumbnail)
 		}
 
 	, _setupThumbnail: function () {
-			var that = this
-				, navigatorRatio = 1.0 * this.$panel.width() / this.$panel.height()
-				, navigatorThumbnailRatio = 1.0 * this.width / this.height
-				, _width
-				, _height
-				, _left = 0
-				, _top = 0
-
-			if( navigatorRatio > navigatorThumbnailRatio ) {
-				// panel width is bigger than thumbnail width
-				_width = navigatorThumbnailRatio * this.$panel.height()
-				_height = this.$panel.height()
-				_left = (this.$panel.width() - _width)/2
-			} else {
-				// panel height is bigger than thumbnail height
-				_width = this.$panel.width()
-				_height = this.$panel.width() / navigatorThumbnailRatio
-				_top = (this.$panel.height() - _height)/2
-			}
-
-			// Setup Thumbnail
-			this.$thumbnail.width(_width)
-			this.$thumbnail.height(_height)
-			this.$thumbnail.css({left: _left, top: _top})
-
 			// Setup Canvas
-			this.$thumbnailCanvas.attr('width', _width)
-			this.$thumbnailCanvas.attr('height', _height)
+			this.$thumbnail.attr('width', this.$panel._width)
+			this.$thumbnail.attr('height', this.$panel._height)
 
-			// Setup Canvas cache
-			this.$thumbnailCanvasBuffer.attr('width', this.width)
-			this.$thumbnailCanvasBuffer.attr('height', this.height)
-
-			// Cache Thumbnail sizes
-			this.eventData.thumbnailSizes.width = _width
-			this.eventData.thumbnailSizes.height = _height
-
-			that._updateThumbnailImage()
+			this._updateThumbnailImage()
 		}
 
 	, _setupThumbnailSizes: function () {
-			var boundingBox = this.cy.elements().boundingBox()
+			// Update bounding box cache
+			this.boundingBox = this.cy.elements().boundingBox()
 
-			this.$thumbnail.zoom = Math.min(this.height /  boundingBox.h, this.width /  boundingBox.w)
+			this.$thumbnail.zoom = Math.min(this.$panel._height / this.boundingBox.h, this.$panel._width / this.boundingBox.w)
 
 			// Used on thumbnail generation
 			this.$thumbnail.pan = {
-				x: (this.width - this.$thumbnail.zoom * (boundingBox.x1 + boundingBox.x2))/2
-			, y: (this.height - this.$thumbnail.zoom * (boundingBox.y1 + boundingBox.y2))/2
+				x: (this.$panel._width - this.$thumbnail.zoom * (this.boundingBox.x1 + this.boundingBox.x2))/2
+			, y: (this.$panel._height - this.$thumbnail.zoom * (this.boundingBox.y1 + this.boundingBox.y2))/2
 			}
 		}
 
 		// If bounding box has changed then update sizes
-		// Else just update thumbnail
-	, _checkThumbnailSizeAndUpdate: function () {
-			// TODO make this part beautiful
+		// Otherwise just update the thumbnail
+	, _checkThumbnailSizesAndUpdate: function () {
+			// Cache previous values
 			var _zoom = this.$thumbnail.zoom
 				, _pan_x = this.$thumbnail.pan.x
 				, _pan_y = this.$thumbnail.pan.y
@@ -187,7 +166,7 @@
 
 			if (_zoom != this.$thumbnail.zoom || _pan_x != this.$thumbnail.pan.x || _pan_y != this.$thumbnail.pan.y) {
 				this._setupThumbnail()
-				this._setupView()
+				// this._setupView()
 			} else {
 				this._updateThumbnailImage()
 			}
@@ -251,6 +230,14 @@
 			this.eventData.viewSetup.y = position.top
 		}
 
+	, _initOverlay: function () {
+			// Used to capture mouse events
+			this.$overlay = $('<dib class="cytoscape-navigatorOverlay"/>')
+
+			// Add overlay to the DOM
+			this.$panel.append(this.$overlay)
+		}
+
 	/****************************
 		Event handling functions
 	****************************/
@@ -261,7 +248,7 @@
 			this.height = this.$element.height()
 
 			this._setupPanel()
-			this._checkThumbnailSizeAndUpdate()
+			this._checkThumbnailSizesAndUpdate()
 			this._setupView()
 		}
 
@@ -292,6 +279,11 @@
 			, thumbnailSizes: {
 					width: 0
 				, height: 0
+				, zoom: 1
+				, pan: {
+						x: 0
+					, y: 0
+					}
 				}
 			, viewSetup: {
 					x: 0
@@ -499,7 +491,7 @@
 		}
 
 	, _hookGraphUpdates: function () {
-			this.cy.on('position add remove data', $.proxy(this._checkThumbnailSizeAndUpdate, this, false))
+			this.cy.on('position add remove data', $.proxy(this._checkThumbnailSizesAndUpdate, this, false))
 		}
 
 	, _setGraphUpdatesTimer: function () {
@@ -508,7 +500,7 @@
 				, updateFunction = function () {
 						// Use timeout instead of interval as it is not accumulating events if events pool is not processed fast enough
 						setTimeout(function (){
-							that._checkThumbnailSizeAndUpdate(true)
+							that._checkThumbnailSizesAndUpdate(true)
 							updateFunction()
 						}, delay)
 					}
@@ -522,24 +514,17 @@
 				, timeout = 0 // will remain 0 if force_refresh is true
 
 			// Set thumbnail update frame rate
-			!force_refresh && this.options.thumbnailEventFramerate > 0 && (timeout = ~~(1000 / this.options.thumbnailEventFramerate))
+			if (!force_refresh && this.options.thumbnailEventFramerate > 0) {
+				timeout = ~~(1000 / this.options.thumbnailEventFramerate)
+			}
 
-			if (this._thumbUpdateTimeout === undefined || this._thumbUpdateTimeout === null) {
-				this._thumbUpdateTimeout = setTimeout(function(){
-					// TODO remove double buffering as now it doesn't help to prevent bug #313
+			if (this._thumbnailUpdateTimeout === undefined || this._thumbnailUpdateTimeout === null) {
+				this._thumbnailUpdateTimeout = setTimeout(function(){
 					// Copy scaled thumbnail to buffer
-					that.cy.renderTo(that.$thumbnailCanvasBuffer[0].getContext('2d'), that.$thumbnail.zoom, that.$thumbnail.pan)
-					// Copy thumbnail from buffer to visible canvas
-					// Do it in next frame
-					setTimeout(function () {
-						var context = that.$thumbnailCanvas[0].getContext("2d")
-							, thumbnailSizes = that.eventData.thumbnailSizes
+					that.cy.renderTo(that.$thumbnail[0].getContext('2d'), that.$thumbnail.zoom, that.$thumbnail.pan)
 
-						context.globalCompositeOperation = "copy"
-						context.drawImage(that.$thumbnailCanvasBuffer[0], 0, 0, that.width, that.height, 0, 0, thumbnailSizes.width, thumbnailSizes.height)
-
-						that._thumbUpdateTimeout = null
-					}, 1)
+					// Reset flag
+					that._thumbnailUpdateTimeout = null
 				}, timeout)
 			}
 		}
@@ -564,6 +549,12 @@
 				x: -(_data.viewSetup.x / thumbnailWidth * bb_w + bb.x1) * cyZoom + (bb_w - bb.w)
 			, y: -(_data.viewSetup.y / thumbnailHeight * bb_h + bb.y1) * cyZoom + (bb_h - bb.h)
 			})
+			// console.log(_data.viewSetup.x, this.width, thumbnailWidth, _data.viewSetup.x * this.width / this.$panel._width)
+			// console.log(this.$thumbnail.pan)
+			// this.cy.pan({
+			// 	x: -(_data.viewSetup.x * this.width / _data.viewSetup.width + bb.x1)
+			// , y: -(_data.viewSetup.y * this.height / _data.viewSetup.height + bb.y1)
+			// })
 		}
 
 	/**
