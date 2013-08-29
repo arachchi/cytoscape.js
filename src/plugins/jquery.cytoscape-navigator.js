@@ -423,13 +423,13 @@
 
 	, _eventZoom: function (ev) {
 			var zoomRate = Math.pow(10, ev.originalEvent.wheelDeltaY / 1000 || ev.originalEvent.detail / -32)
-				, mouse_position = {
-						left: ev.originalEvent.pageX
-					, top: ev.originalEvent.pageY
+				, mousePosition = {
+						left: ev.offsetX
+					, top: ev.offsetY
 					}
 
 			if (this.cy.zoomingEnabled()) {
-				this._zoomCy(zoomRate, mouse_position)
+				this._zoomCy(zoomRate, mousePosition)
 			}
 		}
 
@@ -490,31 +490,28 @@
 	 * @param {number} zoomRate The zoom rate value. 1 is 100%.
 	 */
 	, _zoomCy: function (zoomRate, zoomCenterRaw) {
-			var _data = this.eventData
-				, view = _data.viewSetup
-				, scale = 1.0 * this.width / _data.thumbnailSizes.width
-				, zoomCenter
-				, zoomCenterRelative
+			var zoomCenter
 				, isZoomCenterInView = false
 
 			if (zoomCenterRaw) {
-				isZoomCenterInView = (zoomCenterRaw.left > view.x) && (zoomCenterRaw.left < view.x + view.width)
-					&& (zoomCenterRaw.top > view.y) && (zoomCenterRaw.top < view.y + view.height)
+				isZoomCenterInView = (zoomCenterRaw.left > this.$view.x) && (zoomCenterRaw.left < this.$view.x + this.$view.w)
+					&& (zoomCenterRaw.top > this.$view.y) && (zoomCenterRaw.top < this.$view.y + this.$view.h)
 			}
 
 			if (zoomCenterRaw && isZoomCenterInView) {
+				// Zoom about mouse position
 				zoomCenter = {
-					x: (zoomCenterRaw.left - view.x) * (1.0 * this.width / view.width)
-				, y: (zoomCenterRaw.top - view.y) * (1.0 * this.height / view.height)
+					x: (zoomCenterRaw.left - this.$view.x) * (1.0 * this.width / this.$view.w)
+				, y: (zoomCenterRaw.top - this.$view.y) * (1.0 * this.height / this.$view.h)
 				}
 			} else {
+				// Zoom abount View center
 				zoomCenter = {
-					x: scale * (view.x + view.width/2)
-				, y: scale * (view.y + view.height/2)
+					x: this.width / 2
+				, y: this.height / 2
 				}
 			}
 
-			// Zoom about View center
 			this.cy.zoom({
 				level: this.cy.zoom() * zoomRate
 			, position: zoomCenter
