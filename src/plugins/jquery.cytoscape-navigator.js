@@ -30,45 +30,18 @@
 
 			// Panel
 			this._initPanel()
-			this._setupPanel()
 
 			// Thumbnail
 			this._initThumbnail()
-			this._setupThumbnailSizes()
-			this._setupThumbnail()
 
-			// Repopulate thumbnail after graph render
-			this.cy.on('initrender', $.proxy(this._checkThumbnailSizesAndUpdate, this))
-
-			// Thumbnail updates
-			if (this.options.thumbnailLiveFramerate === false) {
-				this._hookGraphUpdates()
-			} else {
-				this._setGraphUpdatesTimer()
-			}
-
-
-			// // View
-			// this._initView()
+			// View
+			this._initView()
 
 			// // Overlay
 			// this._initOverlay()
 
 			// // Listen for events
 			// this._initEventsHandling()
-
-			// // Setup view
-			// this._setupView()
-
-			// // Thumbnail updates
-			// if (this.options.thumbnailLiveFramerate === false) {
-			// 	this._hookGraphUpdates()
-			// } else {
-			// 	this._setGraphUpdatesTimer()
-			// }
-
-			// // Hook graph zoom and pan
-			// this.cy.on('zoom pan', $.proxy(this._setupView, this))
 
 			// // Hook element resize
 			// this.$element.on('resize', $.proxy(this.resize, this))
@@ -85,8 +58,8 @@
 		/*
 		 * Used inner attributes
 		 *
-		 * _width {number}
-		 * _height {number}
+		 * w {number} width
+		 * h {number} height
 		 */
 	, _initPanel: function () {
 			var options = this.options
@@ -109,14 +82,16 @@
 				this.$panel = $('<div class="cytoscape-navigator"/>')
 				this.$element.append(this.$panel)
 			}
+
+			this._setupPanel()
 		}
 
 	, _setupPanel: function () {
 			var options = this.options
 
 			// Cache sizes
-			this.$panel._width = this.$panel.width()
-			this.$panel._height = this.$panel.height()
+			this.$panel.w = this.$panel.width()
+			this.$panel.h = this.$panel.height()
 		}
 
 		/*
@@ -131,12 +106,26 @@
 
 			// Add thumbnail canvas to the DOM
 			this.$panel.append(this.$thumbnail)
+
+			// Setup thumbnail
+			this._setupThumbnailSizes()
+			this._setupThumbnail()
+
+			// Repopulate thumbnail after graph render
+			this.cy.on('initrender', $.proxy(this._checkThumbnailSizesAndUpdate, this))
+
+			// Thumbnail updates
+			if (this.options.thumbnailLiveFramerate === false) {
+				this._hookGraphUpdates()
+			} else {
+				this._setGraphUpdatesTimer()
+			}
 		}
 
 	, _setupThumbnail: function () {
 			// Setup Canvas
-			this.$thumbnail.attr('width', this.$panel._width)
-			this.$thumbnail.attr('height', this.$panel._height)
+			this.$thumbnail.attr('width', this.$panel.w)
+			this.$thumbnail.attr('height', this.$panel.h)
 
 			this._updateThumbnailImage()
 		}
@@ -145,12 +134,12 @@
 			// Update bounding box cache
 			this.boundingBox = this.cy.elements().boundingBox()
 
-			this.$thumbnail.zoom = Math.min(this.$panel._height / this.boundingBox.h, this.$panel._width / this.boundingBox.w)
+			this.$thumbnail.zoom = Math.min(this.$panel.h / this.boundingBox.h, this.$panel.w / this.boundingBox.w)
 
 			// Used on thumbnail generation
 			this.$thumbnail.pan = {
-				x: (this.$panel._width - this.$thumbnail.zoom * (this.boundingBox.x1 + this.boundingBox.x2))/2
-			, y: (this.$panel._height - this.$thumbnail.zoom * (this.boundingBox.y1 + this.boundingBox.y2))/2
+				x: (this.$panel.w - this.$thumbnail.zoom * (this.boundingBox.x1 + this.boundingBox.x2))/2
+			, y: (this.$panel.h - this.$thumbnail.zoom * (this.boundingBox.y1 + this.boundingBox.y2))/2
 			}
 		}
 
@@ -166,68 +155,62 @@
 
 			if (_zoom != this.$thumbnail.zoom || _pan_x != this.$thumbnail.pan.x || _pan_y != this.$thumbnail.pan.y) {
 				this._setupThumbnail()
-				// this._setupView()
+				this._setupView()
 			} else {
 				this._updateThumbnailImage()
 			}
 		}
 
+		/*
+		 * Used inner attributes
+		 *
+		 * w {number} width
+		 * h {number} height
+		 * x {number}
+		 * y {number}
+		 * locked {boolean}
+		 * borderWidth {number}
+		 */
 	, _initView: function () {
 			var that = this
 
 			this.$view = $('<div class="cytoscape-navigatorView"/>')
-			this.$thumbnail.append(this.$view)
+			this.$panel.append(this.$view)
+
+			// Compute some values
+			this.$view.borderWidth = parseInt(this.$view.css('border-left-width'), 10)
+
+			this._setupView()
+
+			// Hook graph zoom and pan
+			this.cy.on('zoom pan', $.proxy(this._setupView, this))
 		}
 
 	, _setupView: function () {
-			if (this.eventData.viewSetup.locked)
+			if (this.$view.locked)
 				return
 
-			this.$view.borderWidth = parseInt(this.$view.css('border-left-width'), 10)
-
-			var width = 0
-				, height = 0
-				, position = {left: 0, top: 0}
-				// thumbnail available sizes
-				, thumbnailBorderDouble = this.$view.borderWidth * 2
-				, thumbnailWidth = this.$thumbnail.width() - thumbnailBorderDouble
-				, thumbnailHeight = this.$thumbnail.height() - thumbnailBorderDouble
+			var position = {left: 0, top: 0}
 				, cyZoom = this.cy.zoom()
-				, cyPan = {
-						x: this.cy.pan().x
-					, y: this.cy.pan().y
-					}
-				, bb = this.cy.elements().boundingBox()
-				, bb_w = this.width / this.$thumbnail.zoom  // bounding box with graph's proportions
-				, bb_h = this.height / this.$thumbnail.zoom // bounding box with graph's proportions
+				, cyPan = this.cy.pan()
+				, bb = this.boundingBox
 
 			// Horizontal computation
-			position.left = -((cyPan.x - bb_w + bb.w)/cyZoom + bb.x1) * thumbnailWidth / bb_w
-			position.right = position.left + (thumbnailWidth / cyZoom * this.$thumbnail.zoom)
-
-			// Compute width and remove position.right
-			width = position.right - position.left
-			;// for delete
-			delete position.right
+			this.$view.w = this.width / cyZoom * this.$thumbnail.zoom
+			this.$view.x = -cyPan.x * this.$view.w / this.width + this.$thumbnail.pan.x
 
 			// Vertical computation
-			position.top = -((cyPan.y - bb_h + bb.h)/cyZoom + bb.y1) * thumbnailHeight / bb_h
-			position.bottom = position.top + (thumbnailHeight / cyZoom * this.$thumbnail.zoom)
+			this.$view.h = this.height / cyZoom * this.$thumbnail.zoom
+			this.$view.y = -cyPan.y * this.$view.h / this.height + this.$thumbnail.pan.y
 
-			// Compute width and remove position.bottom
-			height = position.bottom - position.top
-			;// for delete
-			delete position.bottom
-
-			// Set computed values
-			this.$view.show().width(width).height(height).css(position)
-
-			// Cache values into eventData
-			// define like this for speed and in order not to erase additional parameters
-			this.eventData.viewSetup.width = width
-			this.eventData.viewSetup.height = height
-			this.eventData.viewSetup.x = position.left
-			this.eventData.viewSetup.y = position.top
+			// CSS view
+			this.$view
+				.width(this.$view.w)
+				.height(this.$view.h)
+				.css({
+					left: this.$view.x
+				, top: this.$view.y
+				})
 		}
 
 	, _initOverlay: function () {
