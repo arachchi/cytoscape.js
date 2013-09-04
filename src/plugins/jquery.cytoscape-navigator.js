@@ -243,25 +243,58 @@
 
 	, _initEventsHandling: function () {
 			var that = this
-				, eventsAll = [
+				, eventsLocal = [
 				// Mouse events
-					'mousedown'
-				, 'mouseup'
-				, 'mouseover'
-				, 'mouseout'
-				, 'mousemove'
+				  'mousedown'
 				, 'mousewheel'
 				, 'DOMMouseScroll' // Mozilla specific event
 				// Touch events
 				, 'touchstart'
+				]
+				, eventsGlobal = [
+				  'mouseup'
+				, 'mouseout'
+				, 'mousemove'
+				// Touch events
 				, 'touchmove'
 				, 'touchend'
 				]
 
 			// handle events and stop their propagation
-			this.$overlay.on(eventsAll.join(' '), function (ev) {
+			this.$overlay.on(eventsLocal.join(' '), function (ev) {
 				// Touch events
-				if (ev.type == 'touchstart' || ev.type == 'touchend') {
+				if (ev.type == 'touchstart') {
+					// Will count as middle of View
+					ev.offsetX = that.$view.x + that.$view.w / 2
+					ev.offsetY = that.$view.y + that.$view.h / 2
+				}
+
+				// Normalize offset for browsers which do not provide that value
+				if (ev.offsetX === undefined || ev.offsetY === undefined) {
+					var targetOffset = $(ev.target).offset()
+					ev.offsetX = ev.pageX - targetOffset.left
+					ev.offsetY = ev.pageY - targetOffset.top
+				}
+
+				if (ev.type == 'mousedown' || ev.type == 'touchstart') {
+					that._eventMoveStart(ev)
+				} else if (ev.type == 'mousewheel' || ev.type == 'DOMMouseScroll') {
+					that._eventZoom(ev)
+				}
+
+				// Prevent default and propagation
+				// Don't use peventPropagation as it breaks mouse events
+				return false;
+			})
+
+			// Hook global events
+			$('body').on(eventsGlobal.join(' '), function (ev) {
+				// Do not make any computations if it is has no effect on Navigator
+				if (!that.$overlay.inMovement)
+					return;
+
+				// Touch events
+				if (ev.type == 'touchend') {
 					// Will count as middle of View
 					ev.offsetX = that.$view.x + that.$view.w / 2
 					ev.offsetY = that.$view.y + that.$view.h / 2
@@ -278,16 +311,19 @@
 					ev.offsetY = ev.pageY - targetOffset.top
 				}
 
-				if (ev.type == 'mousedown' || ev.type == 'touchstart') {
-					that._eventMoveStart(ev)
-				} else if (ev.type == 'mousemove' || ev.type == 'touchmove') {
+				// Translate global events into local coordinates
+				if (ev.target !== that.$overlay[0]) {
+					var targetOffset = $(ev.target).offset()
+						, overlayOffset = that.$overlay.offset()
+
+					ev.offsetX = ev.offsetX - overlayOffset.left + targetOffset.left
+					ev.offsetY = ev.offsetY - overlayOffset.top + targetOffset.top
+				}
+
+				if (ev.type == 'mousemove' || ev.type == 'touchmove') {
 					that._eventMove(ev)
-				} else if (ev.type == 'mouseup' || ev.type == 'mouseout' || ev.type == 'touchend') {
+				} else if (ev.type == 'mouseup' || ev.type == 'touchend') {
 					that._eventMoveEnd(ev)
-				} else if (ev.type == 'mousewheel' || ev.type == 'DOMMouseScroll') {
-					that._eventZoom(ev)
-				} else if (ev.type == 'mouseover') {
-					// console.log(ev)
 				}
 
 				// Prevent default and propagation
