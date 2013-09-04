@@ -80,6 +80,10 @@ Navigator HTML structure looks like:
 
 [Navigator with custom options and late initialisation](http://jsbin.com/EMELiQI/1/edit)
 
+## Screencast 
+
+[Cytoscape Navigator preview](http://www.youtube.com/watch?v=vGmPK74e8bI)
+
 ## Available options
 
 ### container 
