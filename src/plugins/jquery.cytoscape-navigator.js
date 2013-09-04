@@ -348,10 +348,17 @@
 				this.$overlay.hookPoint.y = this.$view.h / 2
 
 				// Move View to start point
-				this._eventMove({
-					offsetX: this.$panel.w / 2
-				, offsetY: this.$panel.h / 2
-				})
+				if (this.options.viewLiveFramerate !== false) {
+					this._eventMove({
+					  offsetX: this.$panel.w / 2
+					, offsetY: this.$panel.h / 2
+					})
+				} else {
+					this._eventMoveEnd({
+					  offsetX: this.$panel.w / 2
+					, offsetY: this.$panel.h / 2
+					})
+				}
 
 				// View should be inactive as we don't want to move it right after double click
 				this.$overlay.inMovement = false
