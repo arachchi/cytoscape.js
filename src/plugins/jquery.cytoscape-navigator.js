@@ -139,8 +139,8 @@
 	, _checkThumbnailSizesAndUpdate: function () {
 			// Cache previous values
 			var _zoom = this.$thumbnail.zoom
-				, _pan_x = this.$thumbnail.pan.x
-				, _pan_y = this.$thumbnail.pan.y
+			  , _pan_x = this.$thumbnail.pan.x
+			  , _pan_y = this.$thumbnail.pan.y
 
 			this._setupThumbnailSizes()
 
@@ -185,7 +185,7 @@
 				return
 
 			var cyZoom = this.cy.zoom()
-				, cyPan = this.cy.pan()
+			  , cyPan = this.cy.pan()
 
 			// Horizontal computation
 			this.$view.w = this.width / cyZoom * this.$thumbnail.zoom
@@ -200,7 +200,7 @@
 				.width(this.$view.w)
 				.height(this.$view.h)
 				.css({
-					left: this.$view.x
+				  left: this.$view.x
 				, top: this.$view.y
 				})
 		}
@@ -314,7 +314,7 @@
 				// Translate global events into local coordinates
 				if (ev.target !== that.$overlay[0]) {
 					var targetOffset = $(ev.target).offset()
-						, overlayOffset = that.$overlay.offset()
+					  , overlayOffset = that.$overlay.offset()
 
 					ev.offsetX = ev.offsetX - overlayOffset.left + targetOffset.left
 					ev.offsetY = ev.offsetY - overlayOffset.top + targetOffset.top
@@ -427,7 +427,7 @@
 
 	, _checkMousePosition: function (ev) {
 			var borderHorizontal = this.$view.borderLeft + this.$view.borderRight
-				, borderVertical = this.$view.borderTop + this.$view.borderBottom
+			  , borderVertical = this.$view.borderTop + this.$view.borderBottom
 
 			// If mouse in over View
 			if(ev.offsetX > this.$view.x && ev.offsetX < this.$view.x + borderHorizontal + this.$view.w
@@ -464,7 +464,7 @@
 	, _eventZoom: function (ev) {
 			var zoomRate = Math.pow(10, ev.originalEvent.wheelDeltaY / 1000 || ev.originalEvent.detail / -32)
 				, mousePosition = {
-						left: ev.offsetX
+					  left: ev.offsetX
 					, top: ev.offsetY
 					}
 
@@ -518,7 +518,7 @@
 
 	, _moveCy: function () {
 			this.cy.pan({
-				x: -(this.$view.x + this.$view.borderLeft - this.$thumbnail.pan.x) * this.width / this.$view.w
+			  x: -(this.$view.x + this.$view.borderLeft - this.$thumbnail.pan.x) * this.width / this.$view.w
 			, y: -(this.$view.y + this.$view.borderLeft - this.$thumbnail.pan.y) * this.height / this.$view.h
 			})
 		}
@@ -541,13 +541,13 @@
 			if (zoomCenterRaw && isZoomCenterInView) {
 				// Zoom about mouse position
 				zoomCenter = {
-					x: (zoomCenterRaw.left - this.$view.x) * (1.0 * this.width / this.$view.w)
+				  x: (zoomCenterRaw.left - this.$view.x) * (1.0 * this.width / this.$view.w)
 				, y: (zoomCenterRaw.top - this.$view.y) * (1.0 * this.height / this.$view.h)
 				}
 			} else {
 				// Zoom abount View center
 				zoomCenter = {
-					x: this.width / 2
+				  x: this.width / 2
 				, y: this.height / 2
 				}
 			}
@@ -564,8 +564,8 @@
 
 		return this.each(function () {
 			var $this = $(this)
-				, data = $this.data('navigator')
-				, options = typeof option == 'object' && option
+			  , data = $this.data('navigator')
+			  , options = typeof option == 'object' && option
 
 			if (!data) {
 				$this.data('navigator', (data = new Navigator(this, options)))
