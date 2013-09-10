@@ -462,7 +462,7 @@
 		}
 
 	, _eventZoom: function (ev) {
-			var zoomRate = Math.pow(10, ev.originalEvent.wheelDeltaY / 1000 || ev.originalEvent.detail / -32)
+			var zoomRate = Math.pow(10, ev.originalEvent.wheelDeltaY / 1000 || ev.originalEvent.wheelDelta / 1000 || ev.originalEvent.detail / -32)
 				, mousePosition = {
 					  left: ev.offsetX
 					, top: ev.offsetY
