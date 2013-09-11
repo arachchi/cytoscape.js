@@ -174,6 +174,10 @@
 			this.$view.borderBottom = parseInt(this.$view.css('border-bottom-width'), 10)
 			this.$view.borderLeft = parseInt(this.$view.css('border-left-width'), 10)
 
+			// Abstract borders
+			this.$view.borderHorizontal = this.$view.borderLeft + this.$view.borderRight
+			this.$view.borderVertical = this.$view.borderTop + this.$view.borderBottom
+
 			this._setupView()
 
 			// Hook graph zoom and pan
@@ -426,12 +430,9 @@
 		}
 
 	, _checkMousePosition: function (ev) {
-			var borderHorizontal = this.$view.borderLeft + this.$view.borderRight
-			  , borderVertical = this.$view.borderTop + this.$view.borderBottom
-
 			// If mouse in over View
-			if(ev.offsetX > this.$view.x && ev.offsetX < this.$view.x + borderHorizontal + this.$view.w
-				&& ev.offsetY > this.$view.y && ev.offsetY < this.$view.y + borderVertical + this.$view.h) {
+			if(ev.offsetX > this.$view.x && ev.offsetX < this.$view.x + this.$view.borderHorizontal + this.$view.w
+				&& ev.offsetY > this.$view.y && ev.offsetY < this.$view.y + this.$view.borderVertical + this.$view.h) {
 				this.$panel.addClass('mouseover-view')
 			} else {
 				this.$panel.removeClass('mouseover-view')
@@ -534,15 +535,15 @@
 				, isZoomCenterInView = false
 
 			if (zoomCenterRaw) {
-				isZoomCenterInView = (zoomCenterRaw.left > this.$view.x) && (zoomCenterRaw.left < this.$view.x + this.$view.w)
-					&& (zoomCenterRaw.top > this.$view.y) && (zoomCenterRaw.top < this.$view.y + this.$view.h)
+				isZoomCenterInView = (zoomCenterRaw.left > this.$view.x) && (zoomCenterRaw.left < this.$view.x + this.$view.w + this.$view.borderHorizontal)
+					&& (zoomCenterRaw.top > this.$view.y) && (zoomCenterRaw.top < this.$view.y + this.$view.h + this.$view.borderVertical)
 			}
 
 			if (zoomCenterRaw && isZoomCenterInView) {
 				// Zoom about mouse position
 				zoomCenter = {
-				  x: (zoomCenterRaw.left - this.$view.x) * (1.0 * this.width / this.$view.w)
-				, y: (zoomCenterRaw.top - this.$view.y) * (1.0 * this.height / this.$view.h)
+				  x: (zoomCenterRaw.left - this.$view.x - this.$view.borderLeft) * this.width / this.$view.w
+				, y: (zoomCenterRaw.top - this.$view.y - this.$view.borderTop) * this.height / this.$view.h
 				}
 			} else {
 				// Zoom abount View center
