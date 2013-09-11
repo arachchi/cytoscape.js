@@ -73,6 +73,18 @@ Navigator HTML structure looks like:
       <div class="cytoscape-navigatorView"></div>
       <dib class="cytoscape-navigatorOverlay"></dib>
     </div>
+    
+### Resize navigator
+
+You may want to reset Navigator's sizes and settings after:
+
+* Resizing graph's container (e.x. `$('#cy').width(900)`)
+* Resizing graph's Navigator (e.x. `$('#cy .cytoscape-navigator').width(300)`)
+
+In order to have well looking and functioning Navigator you'll have to do one of the following:
+
+* Trigger _resize_ event on graph container (e.x. `$('#cy').trigger('resize')`)
+* Call Navigator's resize method (e.x. `$('#cy').cytoscapeNavigator('resize')`)
 
 ## Examples
 
