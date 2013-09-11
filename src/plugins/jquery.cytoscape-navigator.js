@@ -34,8 +34,8 @@
 			this._initView()
 			this._initOverlay()
 
-			// // Hook element resize
-			// this.$element.on('resize', $.proxy(this.resize, this))
+			// Hook element resize
+			this.$element.on('resize', $.proxy(this.resize, this))
 		}
 
 	, destroy: function () {
