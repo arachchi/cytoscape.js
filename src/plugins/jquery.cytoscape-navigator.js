@@ -40,6 +40,7 @@
 
 	, destroy: function () {
 			this.$panel.remove()
+			this.$element.removeData('navigator')
 		}
 
 	/****************************
