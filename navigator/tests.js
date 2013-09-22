@@ -124,28 +124,28 @@ $(function(){
     var $view = $("#cytoscape .cytoscape-navigator .cytoscape-navigatorView")
 
     // At zoom level 1 view width and height should be 266
-    ok($view.width() == 266 || $view.width() == 267, "Zoom 1: View width is 266 or 267")
-    ok($view.height() == 266 || $view.width() == 267, "Zoom 1: View height is 266 or 267")
+    ok($view.width() === 266 || $view.width() === 267, "Zoom 1: View width is 266 or 267")
+    ok($view.height() === 266 || $view.height() === 267, "Zoom 1: View height is 266 or 267")
 
     // At zoom level 2 view width and height should be 133
     cy.zoom(2)
-    ok($view.width() == 133 || $view.width() == 134, "Zoom 2: View width is 133 or 134")
-    ok($view.height() == 133 || $view.width() == 134, "Zoom 2: View height is 133 or 134")
+    ok($view.width() === 133 || $view.width() === 134, "Zoom 2: View width is 133 or 134")
+    ok($view.height() === 133 || $view.height() === 134, "Zoom 2: View height is 133 or 134")
 
     // At zoom level 10 view width and height should be 26
     cy.zoom(10)
-    ok($view.width() == 26 || $view.width() == 27, "Zoom 2: View width is 26 or 27")
-    ok($view.height() == 26 || $view.width() == 27, "Zoom 2: View height is 26 or 27")
+    ok($view.width() === 26 || $view.width() === 27, "Zoom 2: View width is 26 or 27")
+    ok($view.height() === 26 || $view.height() === 27, "Zoom 2: View height is 26 or 27")
 
     // At zoom level 0.5 view width and height should be 533
     cy.zoom(0.5)
-    ok($view.width() == 533 || $view.width() == 534, "Zoom 0.5: View width is 533 or 534")
-    ok($view.height() == 533 || $view.width() == 534, "Zoom 0.5: View height is 533 or 534")
+    ok($view.width() === 533 || $view.width() === 534, "Zoom 0.5: View width is 533 or 534")
+    ok($view.height() === 533 || $view.height() === 534, "Zoom 0.5: View height is 533 or 534")
 
     // At zoom level 0.1 view width and height should be 0.1
     cy.zoom(0.1)
-    ok($view.width() == 2669, "Zoom 0.1: View width is 2669")
-    ok($view.height() == 2669, "Zoom 0.1: View height is 2669")
+    ok($view.width() === 2669, "Zoom 0.1: View width is 2669")
+    ok($view.height() === 2669, "Zoom 0.1: View height is 2669")
 
     // Destroy Navigator
     $(cy.container()).cyNavigator('destroy')
@@ -159,13 +159,13 @@ $(function(){
     var $view = $("#cytoscape .cytoscape-navigator .cytoscape-navigatorView")
 
     cy.pan({x: 0, y: 0})
-    ok(Math.round($view.position().top) === -58, "Pan 0:0, View's top is right")
-    ok(Math.round($view.position().left) === -33, "Pan 0:0, View's left is right")
+    ok(~~$view.position().top === -58, "Pan 0:0, View's top is right")
+    ok(~~$view.position().left === -33, "Pan 0:0, View's left is right")
 
 
     cy.pan({x: 100, y: 100})
-    ok(Math.round($view.position().top) === -112, "Pan 100:100, View's top is right")
-    ok(Math.round($view.position().left) === -87, "Pan 100:100, View's left is right")
+    ok(~~$view.position().top === -111 || ~~$view.position().top === -112, "Pan 100:100, View's top is right")
+    ok(~~$view.position().left === -86 || ~~$view.position().left === -87, "Pan 100:100, View's left is right")
 
     // Destroy Navigator
     $(cy.container()).cyNavigator('destroy')
@@ -186,25 +186,25 @@ $(function(){
       level: 2
     , position: {x: 0, y: 0}
     })
-    ok($view.width() == 133, "Zoom 2, Pan 0:0: View's width is right")
-    ok($view.height() == 133, "Zoom 2, Pan 0:0: View's height is right")
-    ok(Math.round($view.position().top) === -58, "Zoom 2, Pan 0:0: View's top is right")
-    ok(Math.round($view.position().left) === -33, "Zoom 2, Pan 0:0: View's left is right")
+    ok($view.width() == 133 || $view.width() == 134, "Zoom 2, Pan 0:0: View's width is right")
+    ok($view.height() == 133 || $view.height() == 134, "Zoom 2, Pan 0:0: View's height is right")
+    ok(~~$view.position().top === -58, "Zoom 2, Pan 0:0: View's top is right")
+    ok(~~$view.position().left === -33, "Zoom 2, Pan 0:0: View's left is right")
 
     cy.zoom({
       level: 0.5
     , position: {x: 100, y: 100}
     })
-    ok($view.width() == 534, "Zoom 0.5, Pan 100:100: View's width is right")
-    ok($view.height() == 534, "Zoom 0.5, Pan 100:100: View's height is right")
-    ok(Math.round($view.position().top) === -139, "Zoom 0.5, Pan 100:100: View's top is right")
-    ok(Math.round($view.position().left) === -114, "Zoom 0.5, Pan 100:100: View's left is right")
+    ok($view.width() == 533 || $view.width() == 534, "Zoom 0.5, Pan 100:100: View's width is right")
+    ok($view.height() == 533 || $view.height() == 534, "Zoom 0.5, Pan 100:100: View's height is right")
+    ok(~~$view.position().top === -138, "Zoom 0.5, Pan 100:100: View's top is right")
+    ok(~~$view.position().left === -113 || ~~$view.position().left === -114, "Zoom 0.5, Pan 100:100: View's left is right")
 
     cy.fit(cy.elements())
     ok($view.width() == 150, "Fit elements: View's width is right")
     ok($view.height() == 150, "Fit elements: View's height is right")
-    ok(Math.round($view.position().top) === 0, "Fit elements: View's top is right")
-    ok(Math.round($view.position().left) === 25, "Fit elemets: View's left is right")
+    ok(~~$view.position().top === 0, "Fit elements: View's top is right")
+    ok(~~$view.position().left === 25, "Fit elemets: View's left is right")
 
     // Destroy Navigator
     $(cy.container()).cyNavigator('destroy')
