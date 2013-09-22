@@ -124,23 +124,23 @@ $(function(){
     var $view = $("#cytoscape .cytoscape-navigator .cytoscape-navigatorView")
 
     // At zoom level 1 view width and height should be 266
-    ok($view.width() == 266, "Zoom 1: View width is 266")
-    ok($view.height() == 266, "Zoom 1: View height is 266")
+    ok($view.width() == 266 || $view.width() == 267, "Zoom 1: View width is 266 or 267")
+    ok($view.height() == 266 || $view.width() == 267, "Zoom 1: View height is 266 or 267")
 
     // At zoom level 2 view width and height should be 133
     cy.zoom(2)
-    ok($view.width() == 133, "Zoom 2: View width is 133")
-    ok($view.height() == 133, "Zoom 2: View height is 133")
+    ok($view.width() == 133 || $view.width() == 134, "Zoom 2: View width is 133 or 134")
+    ok($view.height() == 133 || $view.width() == 134, "Zoom 2: View height is 133 or 134")
 
     // At zoom level 10 view width and height should be 26
     cy.zoom(10)
-    ok($view.width() == 26, "Zoom 2: View width is 26")
-    ok($view.height() == 26, "Zoom 2: View height is 26")
+    ok($view.width() == 26 || $view.width() == 27, "Zoom 2: View width is 26 or 27")
+    ok($view.height() == 26 || $view.width() == 27, "Zoom 2: View height is 26 or 27")
 
     // At zoom level 0.5 view width and height should be 533
     cy.zoom(0.5)
-    ok($view.width() == 533, "Zoom 0.5: View width is 533")
-    ok($view.height() == 533, "Zoom 0.5: View height is 533")
+    ok($view.width() == 533 || $view.width() == 534, "Zoom 0.5: View width is 533 or 534")
+    ok($view.height() == 533 || $view.width() == 534, "Zoom 0.5: View height is 533 or 534")
 
     // At zoom level 0.1 view width and height should be 0.1
     cy.zoom(0.1)
